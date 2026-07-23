@@ -1,0 +1,28 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "functions": {
+    "api/server.js": {
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/server?__crumbly_path=/api/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "/api/server?__crumbly_path=/health"
+    },
+    {
+      "source": "/r/:slug",
+      "destination": "/api/server?__crumbly_path=/r/:slug"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

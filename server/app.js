@@ -63,7 +63,7 @@ function withIds(result) {
 
 export async function createApp(overrides = {}) {
   const config = getConfig(overrides);
-  await ensureStorage(config.dataDir);
+  await ensureStorage(config);
   const upload = createUpload(config);
   const app = express();
 
@@ -93,7 +93,7 @@ export async function createApp(overrides = {}) {
   app.post("/api/recipes", async (req, res, next) => {
     try {
       const draft = recipeDraftSchema.parse(req.body);
-      const recipe = await saveRecipe(config.dataDir, draft);
+      const recipe = await saveRecipe(config, draft);
       const baseUrl = getBaseUrl(req, config.publicBaseUrl);
       res.status(201).json({
         recipe,
@@ -107,7 +107,7 @@ export async function createApp(overrides = {}) {
 
   app.get("/api/recipes/:slug", async (req, res, next) => {
     try {
-      const recipe = await getRecipe(config.dataDir, req.params.slug);
+      const recipe = await getRecipe(config, req.params.slug);
       if (!recipe) return res.status(404).json({ error: "Recipe not found." });
       res.json({ recipe });
     } catch (error) {
@@ -118,7 +118,7 @@ export async function createApp(overrides = {}) {
   app.put("/api/recipes/:slug", async (req, res, next) => {
     try {
       const draft = recipeDraftSchema.parse(req.body);
-      const recipe = await updateRecipe(config.dataDir, req.params.slug, draft);
+      const recipe = await updateRecipe(config, req.params.slug, draft);
       if (!recipe) return res.status(404).json({ error: "Recipe not found." });
       const baseUrl = getBaseUrl(req, config.publicBaseUrl);
       res.json({
@@ -133,7 +133,7 @@ export async function createApp(overrides = {}) {
 
   app.get("/api/recipes/:slug/crumb", async (req, res, next) => {
     try {
-      const recipe = await getRecipe(config.dataDir, req.params.slug);
+      const recipe = await getRecipe(config, req.params.slug);
       if (!recipe) return res.status(404).json({ error: "Recipe not found." });
       const baseUrl = getBaseUrl(req, config.publicBaseUrl);
       const crumb = recipeToCrumb(recipe, baseUrl);
@@ -151,7 +151,7 @@ export async function createApp(overrides = {}) {
 
   app.get("/r/:slug", async (req, res, next) => {
     try {
-      const recipe = await getRecipe(config.dataDir, req.params.slug);
+      const recipe = await getRecipe(config, req.params.slug);
       if (!recipe) {
         return res
           .status(404)

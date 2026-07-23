@@ -8,13 +8,17 @@ const toPositiveNumber = (value, fallback) => {
 
 export function getConfig(overrides = {}) {
   const root = process.cwd();
+  const runningOnVercel = process.env.VERCEL === "1";
+  const configuredDataDir =
+    overrides.dataDir ?? process.env.DATA_DIR ?? (runningOnVercel ? "/tmp/crumbly" : "./data");
 
   return {
     port: Number(overrides.port ?? process.env.PORT ?? 3000),
     dataDir: path.resolve(
       root,
-      overrides.dataDir ?? process.env.DATA_DIR ?? "./data"
+      configuredDataDir
     ),
+    databaseUrl: overrides.databaseUrl ?? process.env.DATABASE_URL ?? "",
     publicBaseUrl:
       overrides.publicBaseUrl ?? process.env.PUBLIC_BASE_URL ?? "",
     maxAudioMb: toPositiveNumber(
