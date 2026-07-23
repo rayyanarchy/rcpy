@@ -65,5 +65,6 @@ export const storedRecipeSchema = recipeDraftSchema.extend({
   slug: z.string().min(8),
   uuid: z.string().uuid(),
   createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime()
+  updatedAt: z.string().datetime(),
+  expiresAt: z.string().datetime()
 });

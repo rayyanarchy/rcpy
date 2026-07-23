@@ -54,7 +54,7 @@ export function SuccessDialog({ result, onClose }) {
           <span><Check aria-hidden="true" /></span>
           <div>
             <h2 id="success-title">Ready for Crouton.</h2>
-            <p>Scan this QR inside Crouton, or use one of the fallbacks.</p>
+            <p>Scan this QR inside Crouton within the next hour.</p>
           </div>
         </div>
         <div className="success-content">
@@ -82,7 +82,7 @@ export function SuccessDialog({ result, onClose }) {
           </div>
         </div>
         <p className="compatibility-note">
-          First test: scan this QR with Crouton and confirm the imported fields.
+          This link expires one hour after publishing. First test: scan this QR with Crouton and confirm the imported fields.
           The `.crumb` download is available if link import needs adjustment.
         </p>
       </section>

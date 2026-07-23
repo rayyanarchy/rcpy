@@ -21,8 +21,21 @@ async function ensureDatabase(sql) {
       slug TEXT PRIMARY KEY,
       recipe JSONB NOT NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      expires_at TIMESTAMPTZ NOT NULL
     )
+  `;
+  await sql`
+    ALTER TABLE crumbly_recipes
+    ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ
+  `;
+  await sql`
+    UPDATE crumbly_recipes
+    SET expires_at = NOW()
+    WHERE expires_at IS NULL
+  `;
+  await sql`
+    DELETE FROM crumbly_recipes WHERE expires_at <= NOW()
   `;
 }
 
@@ -37,12 +50,14 @@ export async function ensureStorage(config) {
 export async function saveRecipe(config, draft) {
   await ensureStorage(config);
   const now = new Date().toISOString();
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
   const stored = storedRecipeSchema.parse({
     ...draft,
     slug: crypto.randomBytes(9).toString("base64url"),
     uuid: crypto.randomUUID(),
     createdAt: now,
-    updatedAt: now
+    updatedAt: now,
+    expiresAt
   });
   await writeRecipe(config, stored);
   return stored;
@@ -57,7 +72,8 @@ export async function updateRecipe(config, slug, draft) {
     slug: existing.slug,
     uuid: existing.uuid,
     createdAt: existing.createdAt,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    expiresAt: existing.expiresAt
   });
   await writeRecipe(config, stored);
   return stored;
@@ -67,10 +83,12 @@ async function writeRecipe(config, recipe) {
   const sql = database(config);
   if (sql) {
     await sql`
-      INSERT INTO crumbly_recipes (slug, recipe, created_at, updated_at)
-      VALUES (${recipe.slug}, ${JSON.stringify(recipe)}::jsonb, ${recipe.createdAt}, ${recipe.updatedAt})
+      INSERT INTO crumbly_recipes (slug, recipe, created_at, updated_at, expires_at)
+      VALUES (${recipe.slug}, ${JSON.stringify(recipe)}::jsonb, ${recipe.createdAt}, ${recipe.updatedAt}, ${recipe.expiresAt})
       ON CONFLICT (slug) DO UPDATE
-      SET recipe = EXCLUDED.recipe, updated_at = EXCLUDED.updated_at
+      SET recipe = EXCLUDED.recipe,
+          updated_at = EXCLUDED.updated_at,
+          expires_at = EXCLUDED.expires_at
     `;
     return;
   }
@@ -86,8 +104,15 @@ export async function getRecipe(config, slug) {
 
   const sql = database(config);
   if (sql) {
+    await sql`
+      DELETE FROM crumbly_recipes
+      WHERE slug = ${slug} AND expires_at <= NOW()
+    `;
     const rows = await sql`
-      SELECT recipe FROM crumbly_recipes WHERE slug = ${slug} LIMIT 1
+      SELECT recipe
+      FROM crumbly_recipes
+      WHERE slug = ${slug} AND expires_at > NOW()
+      LIMIT 1
     `;
     return rows[0] ? storedRecipeSchema.parse(rows[0].recipe) : null;
   }
@@ -96,7 +121,12 @@ export async function getRecipe(config, slug) {
 
   try {
     const raw = await fs.readFile(target, "utf8");
-    return storedRecipeSchema.parse(JSON.parse(raw));
+    const recipe = storedRecipeSchema.parse(JSON.parse(raw));
+    if (Date.parse(recipe.expiresAt) <= Date.now()) {
+      await fs.rm(target, { force: true });
+      return null;
+    }
+    return recipe;
   } catch (error) {
     if (error.code === "ENOENT") return null;
     throw error;
