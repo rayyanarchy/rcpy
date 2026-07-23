@@ -167,6 +167,52 @@ Set the service health-check path to `/health`.
 This real-device scan is the final compatibility check because Crouton's
 website parser is not publicly documented.
 
+## Host on Vercel with Neon
+
+This repository is also configured for Vercel. On Vercel, uploaded audio uses
+the temporary function filesystem and is deleted after processing; published
+recipes are stored in Neon Postgres so their public pages and QR links survive
+redeploys.
+
+### 1. Create a Neon database
+
+1. Create a free project at [Neon](https://neon.tech).
+2. Copy its pooled connection string. It begins with `postgresql://`.
+3. Do not put it in Git or expose it in browser code.
+
+The application creates its small `crumbly_recipes` table automatically on its
+first request.
+
+### 2. Import the GitHub repository into Vercel
+
+1. Go to [Vercel](https://vercel.com/new) and import the repository.
+2. Keep the default build settings; `vercel.json` supplies `npm run build` and
+   routes API, health, and public recipe requests to the serverless function.
+3. Before deploying, add these environment variables for **Production**,
+   **Preview**, and **Development**:
+
+```dotenv
+GEMINI_API_KEY=your_google_ai_studio_key
+GEMINI_MODEL=gemini-3.5-flash-lite
+DATABASE_URL=your_neon_postgresql_connection_string
+NODE_ENV=production
+```
+
+4. Deploy. Vercel builds the client and runs the Node serverless function for
+   `/api/*`, `/health`, and `/r/*`.
+
+### 3. Verify the live deployment
+
+Open `https://YOUR-DOMAIN/health`; it should return:
+
+```json
+{"ok":true}
+```
+
+Then upload a short audio recipe, publish it, and reopen its generated URL in a
+new browser tab. This verifies both the Gemini request and the Neon-backed
+storage.
+
 ## Privacy and operational notes
 
 - Audio is sent to Gemini for transcription and then deleted locally. The temporary
