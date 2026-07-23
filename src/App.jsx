@@ -86,8 +86,12 @@ export default function App() {
   };
 
   return (
-    <div className="app-shell">
-      <AppHeader reviewMode={Boolean(draft)} onStartOver={startOver} />
+    <div className={`app-shell ${draft ? "" : "app-shell--home"}`}>
+      <AppHeader
+        homeMode={!draft}
+        reviewMode={Boolean(draft)}
+        onStartOver={startOver}
+      />
       {draft ? (
         <ReviewView
           draft={draft}
