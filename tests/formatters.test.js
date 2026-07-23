@@ -12,6 +12,7 @@ function storedRecipe() {
     uuid: crypto.randomUUID(),
     createdAt: "2026-07-23T10:00:00.000Z",
     updatedAt: "2026-07-23T10:00:00.000Z",
+    expiresAt: "2026-07-23T11:00:00.000Z",
     sourceLanguage: "Hindi",
     originalTranscript: "मसाला डालें।",
     englishTranscript: "Add the spices.",

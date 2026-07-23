@@ -68,6 +68,32 @@ describe("Crumbly API", () => {
     expect(crumb.steps).toHaveLength(4);
   });
 
+  it("expires published recipes after one hour", async () => {
+    const processResponse = await request(app)
+      .post("/api/process")
+      .attach("audio", Buffer.from("demo"), "recipe.webm")
+      .expect(200);
+
+    const publishResponse = await request(app)
+      .post("/api/recipes")
+      .send(processResponse.body.draft)
+      .expect(201);
+
+    const recipePath = path.join(
+      dataDir,
+      "recipes",
+      `${publishResponse.body.recipe.slug}.json`
+    );
+    const recipe = JSON.parse(await fs.readFile(recipePath, "utf8"));
+    recipe.expiresAt = "2020-01-01T00:00:00.000Z";
+    await fs.writeFile(recipePath, JSON.stringify(recipe), "utf8");
+
+    await request(app)
+      .get(`/r/${publishResponse.body.recipe.slug}`)
+      .expect(404);
+    await expect(fs.access(recipePath)).rejects.toMatchObject({ code: "ENOENT" });
+  });
+
   it("rejects unsupported files and missing recipe fields", async () => {
     await request(app)
       .post("/api/process")

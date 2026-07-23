@@ -17,13 +17,14 @@ the app.
 2. Gemini transcribes it in the original language.
 3. Gemini translates and extracts the English recipe in one structured response.
 4. The user reviews every field. Uncertain details are visibly marked.
-5. Publishing writes the recipe JSON to the persistent data directory.
+5. Publishing creates a recipe link that expires after one hour.
 6. The public page exposes ordinary HTML and Schema.org Recipe JSON-LD.
 7. The QR contains only the public page URL, keeping it small and easy to scan.
 
 Uploaded audio is deleted from the server after processing, including when
-processing fails. The recipe text remains on disk until its JSON file is
-removed.
+processing fails. Published recipe links remain available for one hour, then
+return "not found". Expired records are removed when accessed or when the
+application next writes a recipe.
 
 ## Requirements
 
@@ -210,8 +211,8 @@ Open `https://YOUR-DOMAIN/health`; it should return:
 ```
 
 Then upload a short audio recipe, publish it, and reopen its generated URL in a
-new browser tab. This verifies both the Gemini request and the Neon-backed
-storage.
+new browser tab within one hour. This verifies both the Gemini request and the
+Neon-backed temporary storage.
 
 ## Privacy and operational notes
 
