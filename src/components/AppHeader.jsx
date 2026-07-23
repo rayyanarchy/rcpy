@@ -1,17 +1,13 @@
 import { Brand } from "./Brand.jsx";
 
-export function AppHeader({ reviewMode, onStartOver }) {
+export function AppHeader({ homeMode, reviewMode, onStartOver }) {
   return (
     <header className="app-header">
-      <Brand />
-      {reviewMode ? (
+      <Brand compact={homeMode} />
+      {reviewMode && (
         <button className="text-action" type="button" onClick={onStartOver}>
           Start over
         </button>
-      ) : (
-        <a className="text-action" href="#how-it-works">
-          How it works
-        </a>
       )}
     </header>
   );

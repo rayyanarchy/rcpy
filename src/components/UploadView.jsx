@@ -1,18 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  AudioLines,
   CircleStop,
   CloudUpload,
   FileAudio,
   LoaderCircle,
   Mic,
-  ScanLine,
-  ScrollText,
-  ShieldCheck,
+  Plus,
   X
 } from "lucide-react";
 import { useRecorder } from "../hooks/useRecorder.js";
-import { Waveform } from "./Waveform.jsx";
 
 const maxBytes = 50 * 1024 * 1024;
 
@@ -62,23 +58,35 @@ export function UploadView({ onProcess, isProcessing, error, clearError }) {
   };
 
   return (
-    <main className="upload-view">
-      <section className="upload-hero" aria-labelledby="upload-title">
-        <Waveform className="waveform--left" />
-        <Waveform className="waveform--right" />
+    <main className="home-upload">
+      <section className="home-hero" aria-labelledby="upload-title">
         <h1 id="upload-title">
-          Turn a spoken recipe into something Crouton can read.
+          <span className="home-hero__first-line">Dictate recipes</span>
+          <span className="home-hero__second-line">
+            <span className="home-hero__into">into</span>
+            <img
+              className="crouton-mark"
+              src="/crouton_icon.png"
+              alt=""
+            />
+            <span className="home-hero__crouton-word" aria-hidden="true">
+              Crouton.
+            </span>
+            <span className="sr-only">Crouton.</span>
+          </span>
         </h1>
         <p>
-          Upload a recording in any language. Review the English recipe, then
-          scan its QR code in Crouton.
+          Upload voice note or video and get
+          <br />
+          import ready recipes for Crouton.
         </p>
       </section>
 
       <section
-        className={`upload-frame ${dragActive ? "is-dragging" : ""} ${
+        className={`home-dropzone ${dragActive ? "is-dragging" : ""} ${
           file ? "has-file" : ""
         }`}
+        aria-label="Recipe recording upload"
         onDragEnter={(event) => {
           event.preventDefault();
           setDragActive(true);
@@ -100,92 +108,86 @@ export function UploadView({ onProcess, isProcessing, error, clearError }) {
         />
 
         {!file ? (
-          <>
-            <CloudUpload className="upload-frame__icon" aria-hidden="true" />
-            <h2>Drop an audio file here</h2>
-            <div className="choose-row">
-              <span>or</span>
+          <div className="home-dropzone__content">
+            <h2>
+              <CloudUpload aria-hidden="true" />
+              <span>Drop your recipe</span>
+            </h2>
+            <div className="home-actions">
               <button
-                className="button button--outline"
+                className="home-pill"
                 type="button"
                 onClick={() => inputRef.current?.click()}
+                disabled={isProcessing || recorder.isRecording}
               >
-                choose a file
+                <span className="home-pill__icon" aria-hidden="true">
+                  <Plus />
+                </span>
+                Choose File
+              </button>
+              <span className="home-actions__or">or</span>
+              <button
+                className={`home-pill ${
+                  recorder.isRecording ? "is-recording" : ""
+                }`}
+                type="button"
+                onClick={
+                  recorder.isRecording ? recorder.stop : recorder.start
+                }
+                disabled={isProcessing}
+              >
+                <span className="home-pill__icon" aria-hidden="true">
+                  {recorder.isRecording ? <CircleStop /> : <Mic />}
+                </span>
+                {recorder.isRecording
+                  ? `Stop · ${formatTime(recorder.seconds)}`
+                  : "Record"}
               </button>
             </div>
             <p className="format-note">
-              MP3, M4A, WAV, MP4, WebM · up to 50 MB
+              mp3, mp4, MVA, M4A, WebM Up to 50mb
             </p>
-          </>
+          </div>
         ) : (
-          <div className="selected-file">
-            <FileAudio aria-hidden="true" />
-            <div>
-              <strong>{file.name}</strong>
-              <span>{(file.size / 1024 / 1024).toFixed(1)} MB</span>
+          <div className="home-selected-file">
+            <div className="home-selected-file__summary">
+              <FileAudio aria-hidden="true" />
+              <div>
+                <strong>{file.name}</strong>
+                <span>{(file.size / 1024 / 1024).toFixed(1)} MB</span>
+              </div>
+              <button
+                className="icon-button"
+                type="button"
+                aria-label="Remove selected recording"
+                onClick={() => setFile(null)}
+                disabled={isProcessing}
+              >
+                <X aria-hidden="true" />
+              </button>
             </div>
-            <button
-              className="icon-button"
-              type="button"
-              aria-label="Remove selected audio"
-              onClick={() => setFile(null)}
-            >
-              <X aria-hidden="true" />
-            </button>
             <audio controls src={previewUrl}>
               <track kind="captions" />
             </audio>
+            <button
+              className="home-pill home-pill--process"
+              type="button"
+              onClick={() => onProcess(file)}
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <>
+                  <LoaderCircle className="spin" aria-hidden="true" />
+                  Preparing…
+                </>
+              ) : (
+                <>
+                  <CloudUpload aria-hidden="true" />
+                  Create Recipe
+                </>
+              )}
+            </button>
           </div>
-        )}
-
-        <div className="or-divider"><span>or</span></div>
-
-        <button
-          className={`record-action ${recorder.isRecording ? "is-recording" : ""}`}
-          type="button"
-          onClick={recorder.isRecording ? recorder.stop : recorder.start}
-          disabled={isProcessing}
-        >
-          <span className="record-action__icon">
-            {recorder.isRecording ? (
-              <CircleStop aria-hidden="true" />
-            ) : (
-              <Mic aria-hidden="true" />
-            )}
-          </span>
-          <span>
-            {recorder.isRecording
-              ? `Stop recording · ${formatTime(recorder.seconds)}`
-              : "Record instead"}
-          </span>
-        </button>
-
-        {!file && !recorder.isRecording && (
-          <div className="ready-status">
-            <AudioLines aria-hidden="true" />
-            <span>Ready to upload</span>
-          </div>
-        )}
-
-        {file && (
-          <button
-            className="button button--primary create-draft"
-            type="button"
-            onClick={() => onProcess(file)}
-            disabled={isProcessing}
-          >
-            {isProcessing ? (
-              <>
-                <LoaderCircle className="spin" aria-hidden="true" />
-                Listening and structuring…
-              </>
-            ) : (
-              <>
-                <AudioLines aria-hidden="true" />
-                Create recipe draft
-              </>
-            )}
-          </button>
         )}
       </section>
 
@@ -195,28 +197,20 @@ export function UploadView({ onProcess, isProcessing, error, clearError }) {
         </div>
       )}
 
-      <section id="how-it-works" className="steps-strip" aria-label="How it works">
-        <article>
-          <span className="step-number">1</span>
-          <AudioLines aria-hidden="true" />
-          <div><h3>Transcribe</h3><p>We convert your audio into text.</p></div>
-        </article>
-        <article>
-          <span className="step-number">2</span>
-          <ScrollText aria-hidden="true" />
-          <div><h3>Review</h3><p>You review the English recipe.</p></div>
-        </article>
-        <article>
-          <span className="step-number">3</span>
-          <ScanLine aria-hidden="true" />
-          <div><h3>Scan</h3><p>Scan the QR code in Crouton.</p></div>
-        </article>
-      </section>
-
-      <p className="privacy-note">
-        <ShieldCheck aria-hidden="true" />
-        Audio is deleted after processing. Published recipes use an
-        unguessable link.
+      <p className="home-privacy-note">
+        <svg
+          className="home-privacy-note__icon"
+          viewBox="0 0 20 22"
+          aria-hidden="true"
+        >
+          <path d="M10 1.2 18 4v6.2c0 5.4-3.3 8.9-8 10.6-4.7-1.7-8-5.2-8-10.6V4l8-2.8Z" />
+          <path
+            className="home-privacy-note__check"
+            d="m6.7 10.8 2 2 4.6-5"
+          />
+        </svg>
+        Audio is deleted after processing published recipes, use an unguessable
+        link.
       </p>
     </main>
   );
