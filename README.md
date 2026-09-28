@@ -1,234 +1,112 @@
-# Crumbly
+# RCPY
+
+Turn voice notes and dictations into recipes for Crouton, Markdown, and PDF.
+
+## Features
+
+- AI recipe extraction: Gemini turns your recording into a structured recipe, validated against a schema so the output is always consistent
+- Record in the browser with a live waveform, or upload an existing audio file (MP3, M4A, WAV, MP4, OGG, FLAC, or WebM)
+- Review and edit the recipe before you save it
+- Export to Crouton, Markdown, or PDF
+- Share each saved recipe with a public link and a QR code that stay valid for one hour
+- Demo mode for trying the whole flow without an API key
 
-Crumbly turns a dictated recipe into:
+## Prerequisites
 
-- an editable English recipe;
-- a public recipe page with Schema.org `Recipe` JSON-LD;
-- a QR code containing that page's URL; and
-- a downloadable `.crumb` file matching the structure observed in
-  `Lasagna.crumb`.
+- Node.js 22.12+ and npm
+- A Google Gemini API key (not needed in demo mode)
+- A microphone, or an audio file of a recipe
 
-`Lasagna OG.crumb` is a backup/reference file and is not used or modified by
-the app.
+## Installation
 
-## How it works
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/rayyanarchy/rcpy.git
+   cd rcpy
+   ```
 
-1. The browser uploads an audio recording to the Node server.
-2. Gemini transcribes it in the original language.
-3. Gemini translates and extracts the English recipe in one structured response.
-4. The user reviews every field. Uncertain details are visibly marked.
-5. Publishing creates a recipe link that expires after one hour.
-6. The public page exposes ordinary HTML and Schema.org Recipe JSON-LD.
-7. The QR contains only the public page URL, keeping it small and easy to scan.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-Uploaded audio is deleted from the server after processing, including when
-processing fails. Published recipe links remain available for one hour, then
-return "not found". Expired records are removed when accessed or when the
-application next writes a recipe.
+3. Copy the example environment file and add your Gemini API key:
+   ```bash
+   cp .env.example .env
+   ```
 
-## Requirements
+4. Start the app:
+   ```bash
+   npm run dev
+   ```
+   Open the URL Vite prints in your terminal (usually `http://localhost:5173`).
 
-- Node.js 22.12 or newer
-- A [Google AI Studio Gemini API key](https://aistudio.google.com/apikey)
+## How To Use
 
-## Run locally
+1. Record a recipe by reading it aloud, or upload an audio file.
+2. Wait a moment while the AI turns it into a structured recipe.
+3. Review the result and edit anything that needs fixing.
+4. Save the recipe to get a shareable link and QR code. They stay valid for one hour, so import or export the recipe before then.
+5. Export the recipe to Crouton, Markdown, or PDF.
 
-```bash
-cp .env.example .env
-```
+## Configuration
 
-Open `.env` and set:
+Set these in your `.env` file.
 
-```dotenv
-GEMINI_API_KEY=your_key_here
-PUBLIC_BASE_URL=http://localhost:3000
-```
+| Variable | Default | Description |
+| --- | --- | --- |
+| `GEMINI_API_KEY` | none | Your Google Gemini API key. Required unless `DEMO_MODE` is on. |
+| `GEMINI_MODEL` | `gemini-3.5-flash-lite` | Gemini model used to process the audio. |
+| `DEMO_MODE` | `false` | Set to `true` to use a built-in demo recipe instead of calling Gemini. |
+| `MAX_AUDIO_MB` | `50` (`4` on Vercel) | Maximum audio upload size in MB. |
+| `PORT` | `3000` | Port for the API server. |
+| `DATA_DIR` | `./data` (`/tmp/rcpy` on Vercel) | Where recipes are stored as JSON files when `DATABASE_URL` is not set. |
+| `DATABASE_URL` | none | Neon Postgres connection string. Leave empty to store recipes as files in `DATA_DIR`. |
+| `PUBLIC_BASE_URL` | none | Public URL of the app, used to build share links and QR codes. |
 
-Then:
+## Scripts
 
-```bash
-npm install
-npm run dev
-```
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Runs the server and the Vite dev client together with hot reload |
+| `npm run build` | Builds the client for production |
+| `npm start` | Runs the server, loading `.env` if present |
+| `npm test` | Runs the test suite once |
+| `npm run test:watch` | Runs the tests in watch mode |
 
-Open [http://localhost:5173](http://localhost:5173). The API and generated
-recipe pages run on port `3000`.
+## API
 
-For a UI-only test that does not call Gemini, set `DEMO_MODE=true` in `.env`.
-This returns the included Aloo Gobi example after any supported file is
-uploaded.
+| Method | Route | Description |
+| --- | --- | --- |
+| `POST` | `/api/process` | Upload audio in the `audio` field and get a recipe draft back |
+| `POST` | `/api/recipes` | Save a recipe |
+| `GET` | `/api/recipes/:slug` | Fetch a saved recipe |
+| `PUT` | `/api/recipes/:slug` | Update a saved recipe |
+| `GET` | `/api/recipes/:slug/crumb` | Download a recipe as a Crouton `.crumb` file |
+| `GET` | `/api/recipes/:slug/md` | Download a recipe as Markdown |
+| `GET` | `/r/:slug` | Public page for a saved recipe |
+| `GET` | `/health` | Health check |
 
-## Production build
+## Privacy
 
-```bash
-npm test
-npm run build
-npm start
-```
+Audio you upload is sent to Google's Gemini API for processing, and the server deletes its temporary copy once processing finishes. Saved recipes are stored as text, in Neon Postgres when `DATABASE_URL` is set and as JSON files otherwise, and are deleted automatically one hour after you save them. Anyone with a recipe's link can view it.
 
-The production server serves both the built React app and the API from
-[http://localhost:3000](http://localhost:3000).
+## Tech Stack
 
-## Host on Railway
+- AI: Google Gen AI SDK (Gemini), Zod for schema validation
+- Frontend: React 19, Vite, Lucide icons
+- Backend: Node.js, Express 5, Multer (audio uploads)
+- Database: Neon serverless Postgres
+- Testing: Vitest, Supertest
+- Hosting: Vercel
+- Fonts: DM Sans, Fraunces, Figtree, Instrument Serif
 
-Railway is a good fit for this version because one Node service and one
-persistent volume are enough.
+## Credits
 
-### 1. Push the folder to GitHub
+RCPY is an independent project and is not affiliated with or endorsed by Crouton. The fonts are used under the SIL Open Font License, and the license texts for the bundled Figtree and Instrument Serif files are in `public/fonts`.
 
-This folder is not currently a Git repository. From this directory:
+---
 
-```bash
-git init
-git add .
-git commit -m "Build Crumbly audio recipe importer"
-git branch -M main
-git remote add origin https://github.com/YOUR_NAME/crumbly.git
-git push -u origin main
-```
+## License
 
-Create the empty `crumbly` repository on GitHub before the final two commands.
-Do not commit `.env`; it is already ignored.
-
-### 2. Create the Railway service
-
-1. Open [Railway](https://railway.com/new).
-2. Choose **Deploy from GitHub repo**.
-3. Select the repository.
-4. Railway should detect Node.js and use `npm run build` followed by
-   `npm start`.
-
-Railway's current Express deployment guide documents the same GitHub flow:
-[Deploy an Express App](https://docs.railway.com/guides/express).
-
-### 3. Add the environment variables
-
-In the service's **Variables** tab add:
-
-```dotenv
-GEMINI_API_KEY=your_real_key
-GEMINI_MODEL=gemini-3.5-flash-lite
-DATA_DIR=/app/data
-MAX_AUDIO_MB=50
-DEMO_MODE=false
-NODE_ENV=production
-```
-
-Do not add `PORT`; Railway provides it automatically.
-
-`PUBLIC_BASE_URL` is optional because the server derives the URL from the
-incoming request. If you later add a custom domain, set it to the canonical
-address, for example:
-
-```dotenv
-PUBLIC_BASE_URL=https://recipes.example.com
-```
-
-### 4. Attach persistent storage
-
-1. Add a Railway Volume to the Crumbly service.
-2. Set its mount path to `/app/data`.
-3. Redeploy the service.
-
-Railway applications live under `/app`, so `/app/data` is the correct
-persistent mount for this app's recipe files. See
-[Railway Volumes](https://docs.railway.com/volumes).
-
-Keep this version at **one replica**. The app deliberately uses simple JSON
-files instead of a database, and a single attached volume should have a single
-writer. Move recipes to Postgres or object storage before scaling horizontally.
-
-### 5. Generate the public domain
-
-In the service's **Settings → Networking** section, choose
-**Generate Domain**. Open the generated URL and confirm:
-
-```text
-https://YOUR-DOMAIN/health
-```
-
-returns:
-
-```json
-{"ok":true}
-```
-
-Set the service health-check path to `/health`.
-
-### 6. Test the actual Crouton handoff
-
-1. Upload a short dictated recipe.
-2. Correct the generated fields.
-3. Publish it.
-4. Scan the QR using Crouton's QR import.
-5. Confirm the title, servings, times, ingredients, and steps.
-6. If Crouton's website importer misses a field, download and test the
-   `.crumb` fallback.
-
-This real-device scan is the final compatibility check because Crouton's
-website parser is not publicly documented.
-
-## Host on Vercel with Neon
-
-This repository is also configured for Vercel. On Vercel, uploaded audio uses
-the temporary function filesystem and is deleted after processing; published
-recipes are stored in Neon Postgres so their public pages and QR links survive
-redeploys.
-
-### 1. Create a Neon database
-
-1. Create a free project at [Neon](https://neon.tech).
-2. Copy its pooled connection string. It begins with `postgresql://`.
-3. Do not put it in Git or expose it in browser code.
-
-The application creates its small `crumbly_recipes` table automatically on its
-first request.
-
-### 2. Import the GitHub repository into Vercel
-
-1. Go to [Vercel](https://vercel.com/new) and import the repository.
-2. Keep the default build settings; `vercel.json` supplies `npm run build` and
-   routes API, health, and public recipe requests to the serverless function.
-3. Before deploying, add these environment variables for **Production**,
-   **Preview**, and **Development**:
-
-```dotenv
-GEMINI_API_KEY=your_google_ai_studio_key
-GEMINI_MODEL=gemini-3.5-flash-lite
-DATABASE_URL=your_neon_postgresql_connection_string
-NODE_ENV=production
-```
-
-4. Deploy. Vercel builds the client and runs the Node serverless function for
-   `/api/*`, `/health`, and `/r/*`.
-
-### 3. Verify the live deployment
-
-Open `https://YOUR-DOMAIN/health`; it should return:
-
-```json
-{"ok":true}
-```
-
-Then upload a short audio recipe, publish it, and reopen its generated URL in a
-new browser tab within one hour. This verifies both the Gemini request and the
-Neon-backed temporary storage.
-
-## Privacy and operational notes
-
-- Audio is sent to Gemini for transcription and then deleted locally. The temporary
-  Gemini Files API upload is deleted after processing as well.
-- Published recipe pages are reachable by anyone with their unguessable link.
-- Pages include `noindex, nofollow`, but that is not access control.
-- Recipe JSON is stored under `DATA_DIR/recipes`.
-- The API key stays on the server and is never included in the browser bundle.
-- Back up the Railway volume if the recipes matter long-term.
-
-## Useful commands
-
-```bash
-npm run dev       # React dev server + watched Node API
-npm test          # API and formatter tests
-npm run build     # Production React bundle
-npm start         # Production server
-```
+This project is open source and available under the [MIT License](LICENSE).

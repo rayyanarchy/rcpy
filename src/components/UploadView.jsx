@@ -70,16 +70,22 @@ export function UploadView({ onProcess, isProcessing, error, clearError }) {
               alt=""
             />
             <span className="home-hero__crouton-word" aria-hidden="true">
-              Crouton.
+              Crouton,
             </span>
-            <span className="sr-only">Crouton.</span>
+            <span className="home-hero__extra">Markdown &amp; PDF.</span>
           </span>
         </h1>
         <p>
-          Upload voice note or video and get
-          <br />
-          import ready recipes for Crouton.
+          Upload a voice note or video. RCPY extracts structured ingredients and steps,
+          <br className="hero-break" />
+          ready for Crouton (.crumb), Markdown (.md), and PDF export.
         </p>
+        <div className="home-hero__tags" aria-label="Supported output formats">
+          <span className="hero-format-tag">.crumb</span>
+          <span className="hero-format-tag">.md</span>
+          <span className="hero-format-tag">PDF</span>
+          <span className="hero-format-tag">JSON-LD</span>
+        </div>
       </section>
 
       <section
@@ -209,7 +215,7 @@ export function UploadView({ onProcess, isProcessing, error, clearError }) {
             d="m6.7 10.8 2 2 4.6-5"
           />
         </svg>
-        Audio is deleted after processing published recipes, use an unguessable
+        Audio is deleted after processing. Published recipes use an unguessable
         link.
       </p>
     </main>

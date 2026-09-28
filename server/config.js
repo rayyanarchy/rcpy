@@ -1,4 +1,5 @@
 import path from "node:path";
+import { APP_NAME } from "./constants.js";
 
 const toBoolean = (value) => String(value).toLowerCase() === "true";
 const toPositiveNumber = (value, fallback) => {
@@ -10,9 +11,10 @@ export function getConfig(overrides = {}) {
   const root = process.cwd();
   const runningOnVercel = process.env.VERCEL === "1";
   const configuredDataDir =
-    overrides.dataDir ?? process.env.DATA_DIR ?? (runningOnVercel ? "/tmp/crumbly" : "./data");
+    overrides.dataDir ?? process.env.DATA_DIR ?? (runningOnVercel ? "/tmp/rcpy" : "./data");
 
   return {
+    appName: overrides.appName ?? APP_NAME,
     port: Number(overrides.port ?? process.env.PORT ?? 3000),
     dataDir: path.resolve(
       root,
@@ -23,7 +25,7 @@ export function getConfig(overrides = {}) {
       overrides.publicBaseUrl ?? process.env.PUBLIC_BASE_URL ?? "",
     maxAudioMb: toPositiveNumber(
       overrides.maxAudioMb ?? process.env.MAX_AUDIO_MB,
-      50
+      runningOnVercel ? 4 : 50
     ),
     demoMode:
       overrides.demoMode ??

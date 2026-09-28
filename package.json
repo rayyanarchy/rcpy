@@ -1,9 +1,15 @@
 {
-  "name": "crumbly",
-  "version": "0.1.0",
+  "name": "rcpy",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "Turn dictated recipes into Crouton-ready links, QR codes, and .crumb files.",
+  "description": "Turn voice notes and dictations into recipes for Crouton, Markdown, and PDF.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rayyanarchy/rcpy.git"
+  },
+  "homepage": "https://rcpy.vercel.app",
   "engines": {
     "node": ">=22.12"
   },
@@ -20,6 +26,7 @@
     "@google/genai": "^2.13.0",
     "@neondatabase/serverless": "^1.1.0",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
     "lucide-react": "^1.26.0",
     "multer": "^2.2.0",
     "qrcode": "^1.5.4",

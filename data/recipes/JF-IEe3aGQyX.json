@@ -1,0 +1,131 @@
+{
+  "sourceLanguage": "hi",
+  "originalTranscript": "chicken nuggets ki recipe. kaun se type? acha nuggets okay correct. 1/2 kg chicken boneless chicken lena. Usko chote chote pieces mein karke uska keema bana lena. Fir uske baad uske andar do teaspoon garlic powder. Fir one teaspoon peri peri masala aur aur kya dala tha? Aram se boliye, urgent karna. pause karo. Yeah. half teaspoon kali mirchi powder aur half teaspoon ya half teaspoon se zyadada lal mirchi powder aur namak ek half teaspoon se zyadada kam ya half teaspoon inch namak. Jab keema iska bana lete hai chicken ka uske baad isme garlic powder, lal mirchi powder, kali mirchi powder, namak aur ye peri peri masala aur ek quarter teaspoon mixed herbs nahi toh oregano dal ke pura mix kar dena. Itni tumhari recipe, uske baad cutlet nuggets banane ke liye shape de dena aur ek ande mein ek namak kali mirchi dal ke phet lena. Usme ye jo nuggets shape dete hai wo dip karna aur bread crumb pe coat karke deep fry bhi kar sakte hai shallow fry bhi kar sakte hai. nuggets ki recipe itni chahie.",
+  "englishTranscript": "Chicken nuggets recipe. Which type? Ah, nuggets, okay, correct. Take 1/2 kg chicken, boneless chicken. Cut it into small pieces and mince it. Then after that, add 2 teaspoons of garlic powder into it. Then 1 teaspoon peri peri masala and what else was added? Speak slowly, need to do it urgently. Pause. Yeah. Half teaspoon black pepper powder and half teaspoon or slightly more than half teaspoon red chili powder and salt a little less than half teaspoon or half teaspoon of salt. Once you make the mince of the chicken, after that add garlic powder, red chili powder, black pepper powder, salt, and this peri peri masala and a quarter teaspoon mixed herbs or oregano, mix everything well. That's your recipe, then to make cutlet nuggets give it a shape and beat an egg with some salt and black pepper. Dip the shaped nuggets in it and coat them in breadcrumbs, you can deep fry or shallow fry them. That's all for the nuggets recipe.",
+  "name": "Chicken Nuggets",
+  "description": "Homemade chicken nuggets made with minced boneless chicken, garlic powder, peri-peri masala, and spices, then coated in egg and breadcrumbs to be fried.",
+  "servings": null,
+  "prepMinutes": null,
+  "cookMinutes": null,
+  "ingredients": [
+    {
+      "quantity": "1/2 kg",
+      "amount": 0.5,
+      "unit": "KILOGRAM",
+      "name": "boneless chicken, cut into small pieces and minced",
+      "uncertain": false,
+      "id": "c53fc822-203d-4b53-a35d-6b054a8db835"
+    },
+    {
+      "quantity": "2 teaspoons",
+      "amount": 2,
+      "unit": "TEASPOON",
+      "name": "garlic powder",
+      "uncertain": false,
+      "id": "9aa73167-9107-435d-a380-2d91615cfc63"
+    },
+    {
+      "quantity": "1 teaspoon",
+      "amount": 1,
+      "unit": "TEASPOON",
+      "name": "peri-peri masala",
+      "uncertain": false,
+      "id": "7b8144bc-b050-415c-8b5b-c4aa16fe594b"
+    },
+    {
+      "quantity": "1/2 teaspoon",
+      "amount": 0.5,
+      "unit": "TEASPOON",
+      "name": "black pepper powder",
+      "uncertain": false,
+      "id": "252887db-7ccb-439d-8afc-6182565b9bd8"
+    },
+    {
+      "quantity": "1/2 teaspoon",
+      "amount": 0.5,
+      "unit": "TEASPOON",
+      "name": "red chili powder (or slightly more)",
+      "uncertain": true,
+      "id": "e2b17df3-7b24-479a-99f3-1164a8e335a7"
+    },
+    {
+      "quantity": "1/2 teaspoon",
+      "amount": 0.5,
+      "unit": "TEASPOON",
+      "name": "salt (or slightly less)",
+      "uncertain": true,
+      "id": "12fd4d64-b2a9-4105-bcda-adba364b3c81"
+    },
+    {
+      "quantity": "1/4 teaspoon",
+      "amount": 0.25,
+      "unit": "TEASPOON",
+      "name": "mixed herbs or oregano",
+      "uncertain": false,
+      "id": "a5dad609-e323-42de-ad37-06b1d9994d6d"
+    },
+    {
+      "quantity": "1",
+      "amount": 1,
+      "unit": "ITEM",
+      "name": "egg",
+      "uncertain": false,
+      "id": "0c530cef-05a0-4024-ba6e-d9806a11ce1a"
+    },
+    {
+      "quantity": "",
+      "amount": null,
+      "unit": "ITEM",
+      "name": "salt and black pepper for the egg wash",
+      "uncertain": false,
+      "id": "867b796b-f560-4f7d-a137-025a2b3aacaf"
+    },
+    {
+      "quantity": "",
+      "amount": null,
+      "unit": "ITEM",
+      "name": "breadcrumbs for coating",
+      "uncertain": false,
+      "id": "e3fc8008-d960-41da-acbc-26854732b37e"
+    }
+  ],
+  "steps": [
+    {
+      "text": "Minced the boneless chicken pieces.",
+      "uncertain": false,
+      "id": "68389ab0-fd6e-4a5c-9728-59a20f7096a4"
+    },
+    {
+      "text": "Add garlic powder, peri-peri masala, black pepper powder, red chili powder, salt, mixed herbs or oregano to the minced chicken and mix thoroughly.",
+      "uncertain": false,
+      "id": "c2a65684-7acf-4e36-9c2c-9585c4b9e5f9"
+    },
+    {
+      "text": "Shape the mixture into nuggets or cutlets.",
+      "uncertain": false,
+      "id": "aebd41b1-dece-4f9e-a447-9b9392dd8781"
+    },
+    {
+      "text": "In a separate bowl, beat an egg with salt and black pepper.",
+      "uncertain": false,
+      "id": "51fd2b39-959d-4c1e-887d-b0e767fc28e6"
+    },
+    {
+      "text": "Dip the shaped nuggets into the egg mixture and coat them thoroughly with breadcrumbs.",
+      "uncertain": false,
+      "id": "c653752d-1104-42c3-904a-30c102c6cd7e"
+    },
+    {
+      "text": "Deep fry or shallow fry the nuggets until done.",
+      "uncertain": false,
+      "id": "03361db8-8bfa-4b83-adcb-654deae80a63"
+    }
+  ],
+  "notes": [
+    "Can be either deep fried or shallow fried."
+  ],
+  "slug": "JF-IEe3aGQyX",
+  "uuid": "1c567d75-8053-44d5-a8b2-69cb7e2be939",
+  "createdAt": "2026-07-23T08:25:36.314Z",
+  "updatedAt": "2026-07-23T08:25:36.314Z"
+}
