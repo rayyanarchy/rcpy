@@ -10,15 +10,15 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "/api/server?__crumbly_path=/api/:path*"
+      "destination": "/api/server?__rcpy_path=/api/:path*"
     },
     {
       "source": "/health",
-      "destination": "/api/server?__crumbly_path=/health"
+      "destination": "/api/server?__rcpy_path=/health"
     },
     {
       "source": "/r/:slug",
-      "destination": "/api/server?__crumbly_path=/r/:slug"
+      "destination": "/api/server?__rcpy_path=/r/:slug"
     },
     {
       "source": "/(.*)",

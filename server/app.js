@@ -1,3 +1,4 @@
+import rateLimit from "express-rate-limit";
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -8,6 +9,7 @@ import { getConfig } from "./config.js";
 import {
   getBaseUrl,
   recipeToCrumb,
+  recipeToMarkdown,
   renderRecipePage
 } from "./formatters.js";
 import { recipeDraftSchema } from "./recipe-schema.js";
@@ -65,6 +67,21 @@ export async function createApp(overrides = {}) {
   const config = getConfig(overrides);
   await ensureStorage(config);
   const upload = createUpload(config);
+  const processLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: "Too many uploads. Please try again later." }
+  });
+  
+  const writeLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 60,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: "Too many requests. Please try again later." }
+  });
   const app = express();
 
   app.set("trust proxy", 1);
@@ -75,7 +92,7 @@ export async function createApp(overrides = {}) {
     res.json({ ok: true });
   });
 
-  app.post("/api/process", upload.single("audio"), async (req, res, next) => {
+  app.post("/api/process", processLimiter, upload.single("audio"), async (req, res, next) => {
     if (!req.file) {
       return res.status(400).json({ error: "Choose an audio file first." });
     }
@@ -90,7 +107,7 @@ export async function createApp(overrides = {}) {
     }
   });
 
-  app.post("/api/recipes", async (req, res, next) => {
+  app.post("/api/recipes", writeLimiter, async (req, res, next) => {
     try {
       const draft = recipeDraftSchema.parse(req.body);
       const recipe = await saveRecipe(config, draft);
@@ -98,14 +115,15 @@ export async function createApp(overrides = {}) {
       res.status(201).json({
         recipe,
         url: `${baseUrl}/r/${recipe.slug}`,
-        crumbUrl: `${baseUrl}/api/recipes/${recipe.slug}/crumb`
+        crumbUrl: `${baseUrl}/api/recipes/${recipe.slug}/crumb`,
+        markdownUrl: `${baseUrl}/api/recipes/${recipe.slug}/md`
       });
     } catch (error) {
       next(error);
     }
   });
 
-  app.get("/api/recipes/:slug", async (req, res, next) => {
+  app.put("/api/recipes/:slug", writeLimiter, async (req, res, next) => {
     try {
       const recipe = await getRecipe(config, req.params.slug);
       if (!recipe) return res.status(404).json({ error: "Recipe not found." });
@@ -124,7 +142,8 @@ export async function createApp(overrides = {}) {
       res.json({
         recipe,
         url: `${baseUrl}/r/${recipe.slug}`,
-        crumbUrl: `${baseUrl}/api/recipes/${recipe.slug}/crumb`
+        crumbUrl: `${baseUrl}/api/recipes/${recipe.slug}/crumb`,
+        markdownUrl: `${baseUrl}/api/recipes/${recipe.slug}/md`
       });
     } catch (error) {
       next(error);
@@ -144,6 +163,24 @@ export async function createApp(overrides = {}) {
         .attachment(`${fileName}.crumb`)
         .type("application/json")
         .send(JSON.stringify(crumb));
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/recipes/:slug/md", async (req, res, next) => {
+    try {
+      const recipe = await getRecipe(config, req.params.slug);
+      if (!recipe) return res.status(404).json({ error: "Recipe not found." });
+      const baseUrl = getBaseUrl(req, config.publicBaseUrl);
+      const md = recipeToMarkdown(recipe, baseUrl);
+      const fileName =
+        recipe.name.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") ||
+        "recipe";
+      res
+        .attachment(`${fileName}.md`)
+        .type("text/markdown")
+        .send(md);
     } catch (error) {
       next(error);
     }

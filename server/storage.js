@@ -17,7 +17,16 @@ function database(config) {
 
 async function ensureDatabase(sql) {
   await sql`
-    CREATE TABLE IF NOT EXISTS crumbly_recipes (
+    DO $$
+    BEGIN
+      IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'crumbly_recipes')
+         AND NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'rcpy_recipes') THEN
+        ALTER TABLE crumbly_recipes RENAME TO rcpy_recipes;
+      END IF;
+    END $$;
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS rcpy_recipes (
       slug TEXT PRIMARY KEY,
       recipe JSONB NOT NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -26,16 +35,16 @@ async function ensureDatabase(sql) {
     )
   `;
   await sql`
-    ALTER TABLE crumbly_recipes
+    ALTER TABLE rcpy_recipes
     ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ
   `;
   await sql`
-    UPDATE crumbly_recipes
+    UPDATE rcpy_recipes
     SET expires_at = NOW()
     WHERE expires_at IS NULL
   `;
   await sql`
-    DELETE FROM crumbly_recipes WHERE expires_at <= NOW()
+    DELETE FROM rcpy_recipes WHERE expires_at <= NOW()
   `;
 }
 
@@ -83,7 +92,7 @@ async function writeRecipe(config, recipe) {
   const sql = database(config);
   if (sql) {
     await sql`
-      INSERT INTO crumbly_recipes (slug, recipe, created_at, updated_at, expires_at)
+      INSERT INTO rcpy_recipes (slug, recipe, created_at, updated_at, expires_at)
       VALUES (${recipe.slug}, ${JSON.stringify(recipe)}::jsonb, ${recipe.createdAt}, ${recipe.updatedAt}, ${recipe.expiresAt})
       ON CONFLICT (slug) DO UPDATE
       SET recipe = EXCLUDED.recipe,
@@ -105,12 +114,12 @@ export async function getRecipe(config, slug) {
   const sql = database(config);
   if (sql) {
     await sql`
-      DELETE FROM crumbly_recipes
+      DELETE FROM rcpy_recipes
       WHERE slug = ${slug} AND expires_at <= NOW()
     `;
     const rows = await sql`
       SELECT recipe
-      FROM crumbly_recipes
+      FROM rcpy_recipes
       WHERE slug = ${slug} AND expires_at > NOW()
       LIMIT 1
     `;

@@ -5,13 +5,15 @@ async function request(url, options = {}) {
     ? await response.json()
     : await response.text();
 
-  if (!response.ok) {
-    const message =
-      typeof body === "object" && body?.error
-        ? body.error
-        : "Something went wrong. Please try again.";
-    throw new Error(message);
-  }
+    if (!response.ok) {
+      let message = "Something went wrong. Please try again.";
+      if (typeof body === "object" && body?.error) {
+        message = body.error;
+      } else if (response.status === 413) {
+        message = "That recording is too large. Try a shorter one.";
+      }
+      throw new Error(message);
+    }
 
   return body;
 }

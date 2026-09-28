@@ -5,7 +5,8 @@ import { SuccessDialog } from "./components/SuccessDialog.jsx";
 import { UploadView } from "./components/UploadView.jsx";
 import { processAudio, publishRecipe } from "./lib/api.js";
 
-const localDraftKey = "crumbly:recipe-draft";
+const localDraftKey = "rcpy:recipe-draft";
+const legacyDraftKey = "crumbly:recipe-draft";
 
 export default function App() {
   const [draft, setDraft] = useState(null);
@@ -17,13 +18,15 @@ export default function App() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    const savedDraft = localStorage.getItem(localDraftKey);
+    const savedDraft =
+      localStorage.getItem(localDraftKey) || localStorage.getItem(legacyDraftKey);
     if (!savedDraft) return;
     try {
       setDraft(JSON.parse(savedDraft));
       setSaved(true);
     } catch {
       localStorage.removeItem(localDraftKey);
+      localStorage.removeItem(legacyDraftKey);
     }
   }, []);
 
@@ -63,6 +66,7 @@ export default function App() {
       });
       setResult(response);
       localStorage.removeItem(localDraftKey);
+      localStorage.removeItem(legacyDraftKey);
       setSaved(false);
     } catch (caught) {
       setError(caught.message);
@@ -83,6 +87,7 @@ export default function App() {
     setError("");
     setSaved(false);
     localStorage.removeItem(localDraftKey);
+    localStorage.removeItem(legacyDraftKey);
   };
 
   return (
