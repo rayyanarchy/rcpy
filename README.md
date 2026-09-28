@@ -2,6 +2,7 @@
 
 Turn voice notes and dictations into recipes for Crouton, Markdown, and PDF.
 
+
 ## Features
 
 - AI recipe extraction: Gemini turns your recording into a structured recipe, validated against a schema so the output is always consistent
@@ -11,11 +12,13 @@ Turn voice notes and dictations into recipes for Crouton, Markdown, and PDF.
 - Share each saved recipe with a public link and a QR code that stay valid for one hour
 - Demo mode for trying the whole flow without an API key
 
+
 ## Prerequisites
 
 - Node.js 22.12+ and npm
 - A Google Gemini API key (not needed in demo mode)
 - A microphone, or an audio file of a recipe
+
 
 ## Installation
 
@@ -41,6 +44,7 @@ Turn voice notes and dictations into recipes for Crouton, Markdown, and PDF.
    ```
    Open the URL Vite prints in your terminal (usually `http://localhost:5173`).
 
+
 ## How To Use
 
 1. Record a recipe by reading it aloud, or upload an audio file.
@@ -48,6 +52,7 @@ Turn voice notes and dictations into recipes for Crouton, Markdown, and PDF.
 3. Review the result and edit anything that needs fixing.
 4. Save the recipe to get a shareable link and QR code. They stay valid for one hour, so import or export the recipe before then.
 5. Export the recipe to Crouton, Markdown, or PDF.
+
 
 ## Configuration
 
@@ -64,6 +69,7 @@ Set these in your `.env` file.
 | `DATABASE_URL` | none | Neon Postgres connection string. Leave empty to store recipes as files in `DATA_DIR`. |
 | `PUBLIC_BASE_URL` | none | Public URL of the app, used to build share links and QR codes. |
 
+
 ## Scripts
 
 | Command | What it does |
@@ -73,6 +79,7 @@ Set these in your `.env` file.
 | `npm start` | Runs the server, loading `.env` if present |
 | `npm test` | Runs the test suite once |
 | `npm run test:watch` | Runs the tests in watch mode |
+
 
 ## API
 
@@ -87,9 +94,11 @@ Set these in your `.env` file.
 | `GET` | `/r/:slug` | Public page for a saved recipe |
 | `GET` | `/health` | Health check |
 
+
 ## Privacy
 
 Audio you upload is sent to Google's Gemini API for processing, and the server deletes its temporary copy once processing finishes. Saved recipes are stored as text, in Neon Postgres when `DATABASE_URL` is set and as JSON files otherwise, and are deleted automatically one hour after you save them. Anyone with a recipe's link can view it.
+
 
 ## Tech Stack
 
@@ -101,11 +110,11 @@ Audio you upload is sent to Google's Gemini API for processing, and the server d
 - Hosting: Vercel
 - Fonts: DM Sans, Fraunces, Figtree, Instrument Serif
 
+
 ## Credits
 
 RCPY is an independent project and is not affiliated with or endorsed by Crouton. The fonts are used under the SIL Open Font License, and the license texts for the bundled Figtree and Instrument Serif files are in `public/fonts`.
 
----
 
 ## License
 
