@@ -28,7 +28,7 @@ api = [
 rcpy = "rcpy.cli:app"
 
 [dependency-groups]
-dev = ["pytest>=8.3"]
+dev = ["pytest>=8.3", "rcpy[api]"]  # dev installs the API extra too, so plain `uv run` keeps fastapi
 
 [build-system]
 requires = ["hatchling"]

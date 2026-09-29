@@ -78,3 +78,21 @@ def test_share_failure_sets_exit_code(tmp_path, monkeypatch):
     res = runner.invoke(app, ["parse", str(audio), "--share"])
     assert res.exit_code == 1
     assert "could not reach server" in res.output
+
+
+def test_gemini_network_failure_is_a_clean_error(tmp_path, monkeypatch):
+    import httpx
+    from google import genai
+
+    def boom(self, *args, **kwargs):
+        raise httpx.ConnectError("no network")
+
+    monkeypatch.delenv("DEMO_MODE", raising=False)
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    monkeypatch.setattr(genai.files.Files, "upload", boom)
+    audio = tmp_path / "dal.mp3"
+    audio.write_bytes(b"x")
+    res = runner.invoke(app, ["parse", str(audio)])
+    assert res.exit_code == 1
+    assert "could not reach Gemini" in res.output
+    assert "Traceback" not in res.output

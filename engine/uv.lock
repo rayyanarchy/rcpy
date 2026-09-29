@@ -700,6 +700,7 @@ api = [
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
+    { name = "rcpy", extra = ["api"] },
 ]
 
 [package.metadata]
@@ -719,7 +720,10 @@ requires-dist = [
 provides-extras = ["api"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=8.3" }]
+dev = [
+    { name = "pytest", specifier = ">=8.3" },
+    { name = "rcpy", extras = ["api"] },
+]
 
 [[package]]
 name = "requests"

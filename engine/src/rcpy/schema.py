@@ -41,7 +41,7 @@ class Recipe(BaseModel):
     english_transcript: str = Field(min_length=1)
     name: str = Field(min_length=1)
     description: str
-    servings: int | None = Field(gt=0)
+    servings: int | None = Field(ge=1)
     prep_minutes: int | None = Field(ge=0)
     cook_minutes: int | None = Field(ge=0)
     ingredients: list[Ingredient] = Field(min_length=1)

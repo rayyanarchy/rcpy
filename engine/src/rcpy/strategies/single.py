@@ -5,10 +5,13 @@ but a black box: there is no way to see which part of the audio a given
 ingredient came from. The 'staged' strategy (Phase 3) addresses that.
 """
 
+import logging
 import mimetypes
 from pathlib import Path
 
+import httpx
 from google import genai
+from google.genai import errors as genai_errors
 from google.genai import types
 from pydantic import ValidationError
 
@@ -16,6 +19,16 @@ from rcpy.config import Settings
 from rcpy.errors import RcpyError
 from rcpy.schema import ParseResult
 from rcpy.strategies.demo import DEMO
+
+class _DropAfcNotice(logging.Filter):
+    """The SDK logs a scary-looking notice about "automatic function calling" on
+    every call, even though we don't use function calling. Hide just that line."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        return "automatic function calling" not in record.getMessage().lower()
+
+
+logging.getLogger("google_genai.models").addFilter(_DropAfcNotice())
 
 PROMPT = """Role: You convert spoken family recipes into accurate, structured English recipes.
 
@@ -100,6 +113,10 @@ def parse_audio(path: Path, settings: Settings) -> ParseResult:
                 f"{path.name}: the recipe could not be structured. Try a clearer recording.",
                 status=422,
             ) from exc
+    except genai_errors.APIError as exc:
+        raise RcpyError(f"{path.name}: Gemini API error ({exc.code}): {exc.message}", status=502) from exc
+    except httpx.HTTPError as exc:
+        raise RcpyError(f"{path.name}: could not reach Gemini: {exc}", status=502) from exc
     finally:
         if uploaded is not None and uploaded.name:
             try:
