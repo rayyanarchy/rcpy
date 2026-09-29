@@ -42,6 +42,9 @@ AUDIO_MIME_TYPES = {
     ".mp3": "audio/mp3",
     ".wav": "audio/wav",
     ".m4a": "audio/mp4",
+    ".mp4": "audio/mp4",  # Safari's browser recorder produces this
+    ".mpeg": "audio/mpeg",
+    ".mpga": "audio/mpeg",
     ".aac": "audio/aac",
     ".ogg": "audio/ogg",
     ".opus": "audio/ogg",
@@ -73,7 +76,10 @@ def parse_audio(path: Path, settings: Settings) -> ParseResult:
         return DEMO.model_copy(deep=True)
 
     if not settings.gemini_api_key:
-        raise RcpyError("GEMINI_API_KEY is not set. Add it to .env (or set DEMO_MODE=true to try the CLI).")
+        raise RcpyError(
+            "GEMINI_API_KEY is not set. Add it to .env (or set DEMO_MODE=true to try the CLI).",
+            status=503,
+        )
 
     client = genai.Client(api_key=settings.gemini_api_key)
     uploaded = None
@@ -91,7 +97,8 @@ def parse_audio(path: Path, settings: Settings) -> ParseResult:
             return ParseResult.model_validate_json(response.text or "")
         except ValidationError as exc:
             raise RcpyError(
-                f"{path.name}: the recipe could not be structured. Try a clearer recording."
+                f"{path.name}: the recipe could not be structured. Try a clearer recording.",
+                status=422,
             ) from exc
     finally:
         if uploaded is not None and uploaded.name:

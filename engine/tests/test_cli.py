@@ -44,3 +44,37 @@ def test_bad_format(tmp_path):
     audio.write_bytes(b"x")
     res = runner.invoke(app, ["parse", str(audio), "-f", "pdf"])
     assert res.exit_code != 0
+
+
+def test_share_prints_link_and_writes_qr(tmp_path, monkeypatch):
+    from rcpy import cli
+    from rcpy.share import ShareLinks
+
+    monkeypatch.setenv("DEMO_MODE", "true")
+    monkeypatch.setattr(
+        cli, "share_recipe", lambda result, url: ShareLinks("https://rcpy.example/r/abc12345", "c", "m")
+    )
+    audio = tmp_path / "dal.m4a"
+    audio.write_bytes(b"x")
+    out = tmp_path / "out"
+    res = runner.invoke(app, ["parse", str(audio), "--share", "-o", str(out)])
+    assert res.exit_code == 0
+    assert "https://rcpy.example/r/abc12345" in res.output
+    assert (out / "dal.json").exists()
+    assert (out / "dal.qr.png").read_bytes().startswith(b"\x89PNG")
+
+
+def test_share_failure_sets_exit_code(tmp_path, monkeypatch):
+    from rcpy import cli
+    from rcpy.errors import RcpyError
+
+    def boom(result, url):
+        raise RcpyError("could not reach server")
+
+    monkeypatch.setenv("DEMO_MODE", "true")
+    monkeypatch.setattr(cli, "share_recipe", boom)
+    audio = tmp_path / "dal.m4a"
+    audio.write_bytes(b"x")
+    res = runner.invoke(app, ["parse", str(audio), "--share"])
+    assert res.exit_code == 1
+    assert "could not reach server" in res.output
