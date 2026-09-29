@@ -1,11 +1,8 @@
-"""`rcpy parse --share`: publish a recipe to a running RCPY server and get a link + QR code."""
+"""`rcpy parse --share`: publish a recipe to a running RCPY server and get a link."""
 
-import io
 from dataclasses import dataclass
-from pathlib import Path
 
 import httpx
-import segno
 from pydantic import ValidationError
 
 from rcpy.draft import RecipeDraft
@@ -48,12 +45,3 @@ def share_recipe(result: ParseResult, share_url: str, client: httpx.Client | Non
     data = response.json()
     return ShareLinks(url=data["url"], crumb_url=data["crumbUrl"], markdown_url=data["markdownUrl"])
 
-
-def qr_terminal(url: str) -> str:
-    out = io.StringIO()
-    segno.make(url, error="m").terminal(out=out, compact=True, border=2)
-    return out.getvalue()
-
-
-def qr_png(url: str, path: Path) -> None:
-    segno.make(url, error="m").save(str(path), scale=10, border=2)

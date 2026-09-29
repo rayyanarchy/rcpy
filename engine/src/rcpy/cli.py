@@ -10,7 +10,7 @@ from rcpy import __version__
 from rcpy.config import get_settings
 from rcpy.errors import RcpyError
 from rcpy.formatters import FORMATS, render
-from rcpy.share import qr_png, qr_terminal, share_recipe
+from rcpy.share import share_recipe
 from rcpy.strategies.single import parse_audio
 
 app = typer.Typer(help="Turn dictated recipe audio into structured recipes.", no_args_is_help=True)
@@ -47,7 +47,7 @@ def parse(
         typer.Option("-o", "--out", help="Output directory. Without it, one file + one format prints to stdout."),
     ] = None,
     share: Annotated[
-        bool, typer.Option("--share", help="Publish to the share server: prints a link + QR code (expires in 1h).")
+        bool, typer.Option("--share", help="Publish to the share server and print the link (expires in 1h).")
     ] = False,
 ) -> None:
     """Parse audio recipe(s) into json / md / html."""
@@ -86,11 +86,6 @@ def parse(
                 failures += 1
                 continue
             err.print(f"[bold]{links.url}[/bold] [dim](expires in 1 hour)[/dim]")
-            typer.echo(qr_terminal(links.url), err=True)
-            if out is not None:
-                png = out / f"{path.stem}.qr.png"
-                qr_png(links.url, png)
-                err.print(f"[green]wrote[/green] {png}")
 
     if failures:
         raise typer.Exit(code=1)

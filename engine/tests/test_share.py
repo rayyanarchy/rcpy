@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from rcpy.api import create_app
 from rcpy.config import Settings
 from rcpy.errors import RcpyError
-from rcpy.share import qr_terminal, share_recipe
+from rcpy.share import share_recipe
 
 
 def test_share_round_trip(result, tmp_path):
@@ -44,6 +44,3 @@ def test_share_unreachable_server(result):
     with pytest.raises(RcpyError, match="could not reach"):
         share_recipe(result, "https://rcpy.example", client=client)
 
-
-def test_qr_renders():
-    assert len(qr_terminal("https://rcpy.example/r/abc").splitlines()) > 5

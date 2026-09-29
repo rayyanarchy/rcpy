@@ -46,7 +46,7 @@ def test_bad_format(tmp_path):
     assert res.exit_code != 0
 
 
-def test_share_prints_link_and_writes_qr(tmp_path, monkeypatch):
+def test_share_prints_link(tmp_path, monkeypatch):
     from rcpy import cli
     from rcpy.share import ShareLinks
 
@@ -61,7 +61,6 @@ def test_share_prints_link_and_writes_qr(tmp_path, monkeypatch):
     assert res.exit_code == 0
     assert "https://rcpy.example/r/abc12345" in res.output
     assert (out / "dal.json").exists()
-    assert (out / "dal.qr.png").read_bytes().startswith(b"\x89PNG")
 
 
 def test_share_failure_sets_exit_code(tmp_path, monkeypatch):
@@ -96,3 +95,4 @@ def test_gemini_network_failure_is_a_clean_error(tmp_path, monkeypatch):
     assert res.exit_code == 1
     assert "could not reach Gemini" in res.output
     assert "Traceback" not in res.output
+
