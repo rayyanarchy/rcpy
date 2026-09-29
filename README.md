@@ -15,7 +15,8 @@ Turn voice notes and dictations into recipes for Crouton, Markdown, and PDF.
 
 ## Prerequisites
 
-- Node.js 22.12+ and npm
+- Python 3.13+ and [uv](https://docs.astral.sh/uv/)
+- Node.js 22.12+ and npm (only for the web app)
 - A Google Gemini API key (not needed in demo mode)
 - A microphone, or an audio file of a recipe
 
@@ -28,24 +29,41 @@ Turn voice notes and dictations into recipes for Crouton, Markdown, and PDF.
    cd rcpy
    ```
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Copy the example environment file and add your Gemini API key:
+2. Copy the example environment file and add your Gemini API key:
    ```bash
    cp .env.example .env
    ```
 
-4. Start the app:
+3. Install the engine (the `--all-extras` flag adds the web API packages):
    ```bash
-   npm run dev
+   cd engine
+   uv sync --all-extras
    ```
-   Open the URL Vite prints in your terminal (usually `http://localhost:5173`).
+
+4. Install the web app (optional):
+   ```bash
+   cd ../web
+   npm install
+   ```
 
 
-## How To Use
+## Command line
+
+Run these from `engine/`.
+
+```bash
+uv run rcpy parse recipe.m4a                       # prints JSON
+uv run rcpy parse a.mp3 b.wav -f json,md,html -o out/
+uv run rcpy parse recipe.m4a --share               # link + QR code, expires in 1 hour
+uv run rcpy serve                                  # the web API on http://127.0.0.1:3000
+```
+
+Set `DEMO_MODE=true` to try everything without an API key.
+
+To run the web app in development, start `uv run rcpy serve` in `engine/` and `npm run dev` in `web/`, then open the URL Vite prints (usually `http://localhost:5173`). After `npm run build` in `web/`, `rcpy serve` also serves the built app itself.
+
+
+## How To Use (web app)
 
 1. Record a recipe by reading it aloud, or upload an audio file.
 2. Wait a moment while the AI turns it into a structured recipe.
@@ -56,29 +74,25 @@ Turn voice notes and dictations into recipes for Crouton, Markdown, and PDF.
 
 ## Configuration
 
-Set these in your `.env` file.
+Set these in your `.env` file (in the repo root or `engine/`).
 
 | Variable | Default | Description |
 | --- | --- | --- |
 | `GEMINI_API_KEY` | none | Your Google Gemini API key. Required unless `DEMO_MODE` is on. |
 | `GEMINI_MODEL` | `gemini-3.5-flash-lite` | Gemini model used to process the audio. |
 | `DEMO_MODE` | `false` | Set to `true` to use a built-in demo recipe instead of calling Gemini. |
-| `MAX_AUDIO_MB` | `50` (`4` on Vercel) | Maximum audio upload size in MB. |
-| `PORT` | `3000` | Port for the API server. |
-| `DATA_DIR` | `./data` (`/tmp/rcpy` on Vercel) | Where recipes are stored as JSON files when `DATABASE_URL` is not set. |
-| `DATABASE_URL` | none | Neon Postgres connection string. Leave empty to store recipes as files in `DATA_DIR`. |
-| `PUBLIC_BASE_URL` | none | Public URL of the app, used to build share links and QR codes. |
+| `MAX_AUDIO_MB` | `50` | Maximum audio file size in MB. |
+| `DATA_DIR` | `./data` | Where the API stores shared recipes as JSON files when `DATABASE_URL` is not set. |
+| `DATABASE_URL` | none | Postgres connection string (for example Neon). Leave empty to use files in `DATA_DIR`. |
+| `PUBLIC_BASE_URL` | none | Public URL of the API, used to build share links. Defaults to the request's own host. |
+| `SHARE_URL` | `https://rcpy.vercel.app` | Server that `rcpy parse --share` publishes to. |
 
 
-## Scripts
+## Tests
 
-| Command | What it does |
-| --- | --- |
-| `npm run dev` | Runs the server and the Vite dev client together with hot reload |
-| `npm run build` | Builds the client for production |
-| `npm start` | Runs the server, loading `.env` if present |
-| `npm test` | Runs the test suite once |
-| `npm run test:watch` | Runs the tests in watch mode |
+```bash
+cd engine && uv run pytest
+```
 
 
 ## API
@@ -87,33 +101,35 @@ Set these in your `.env` file.
 | --- | --- | --- |
 | `POST` | `/api/process` | Upload audio in the `audio` field and get a recipe draft back |
 | `POST` | `/api/recipes` | Save a recipe |
-| `GET` | `/api/recipes/:slug` | Fetch a saved recipe |
-| `PUT` | `/api/recipes/:slug` | Update a saved recipe |
-| `GET` | `/api/recipes/:slug/crumb` | Download a recipe as a Crouton `.crumb` file |
-| `GET` | `/api/recipes/:slug/md` | Download a recipe as Markdown |
-| `GET` | `/r/:slug` | Public page for a saved recipe |
+| `GET` | `/api/recipes/{slug}` | Fetch a saved recipe |
+| `PUT` | `/api/recipes/{slug}` | Update a saved recipe |
+| `GET` | `/api/recipes/{slug}/crumb` | Download a recipe as a Crouton `.crumb` file |
+| `GET` | `/api/recipes/{slug}/md` | Download a recipe as Markdown |
+| `GET` | `/r/{slug}` | Public page for a saved recipe |
 | `GET` | `/health` | Health check |
+
+FastAPI also serves interactive docs at `/docs`.
 
 
 ## Privacy
 
-Audio you upload is sent to Google's Gemini API for processing, and the server deletes its temporary copy once processing finishes. Saved recipes are stored as text, in Neon Postgres when `DATABASE_URL` is set and as JSON files otherwise, and are deleted automatically one hour after you save them. Anyone with a recipe's link can view it.
+Audio you upload is sent to Google's Gemini API for processing, and the app deletes its temporary copy once processing finishes. Saved recipes are stored as text, in Postgres when `DATABASE_URL` is set and as JSON files otherwise, and are deleted automatically one hour after you save them. Anyone with a recipe's link can view it.
 
 
 ## Tech Stack
 
-- AI: Google Gen AI SDK (Gemini), Zod for schema validation
+- Engine: Python 3.13, Google Gen AI SDK (Gemini), Pydantic v2
+- CLI: Typer, Rich
+- API: FastAPI, Uvicorn
+- Storage: JSON files, or Postgres (Neon) via psycopg
 - Frontend: React 19, Vite, Lucide icons
-- Backend: Node.js, Express 5, Multer (audio uploads)
-- Database: Neon serverless Postgres
-- Testing: Vitest, Supertest
-- Hosting: Vercel
+- Testing: pytest
 - Fonts: DM Sans, Fraunces, Figtree, Instrument Serif
 
 
 ## Credits
 
-RCPY is an independent project and is not affiliated with or endorsed by Crouton. The fonts are used under the SIL Open Font License, and the license texts for the bundled Figtree and Instrument Serif files are in `public/fonts`.
+RCPY is an independent project and is not affiliated with or endorsed by Crouton. The fonts are used under the SIL Open Font License, and the license texts for the bundled Figtree and Instrument Serif files are in `web/public/fonts`.
 
 
 ## License

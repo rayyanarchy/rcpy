@@ -57,3 +57,4 @@ __pycache__/
 .pytest_cache/
 *.egg-info/
 rcpy-out/
+/engine/data/
