@@ -52,13 +52,15 @@ Turn voice notes and dictations into recipes for Crouton, Markdown, and PDF.
 Run these from `engine/`.
 
 ```bash
-uv run rcpy parse recipe.m4a                       # prints JSON
-uv run rcpy parse a.mp3 b.wav -f json,md,html -o out/
-uv run rcpy parse recipe.m4a --share               # link + QR code, expires in 1 hour
+uv run rcpy parse data/raw/recipe.m4a              # prints JSON
+uv run rcpy parse data/raw/a.mp3 data/raw/b.wav -f json,md,html -o data/out/
+uv run rcpy parse data/raw/recipe.m4a --share      # prints a link that expires in 1 hour
 uv run rcpy serve                                  # the web API on http://127.0.0.1:3000
 ```
 
 Set `DEMO_MODE=true` to try everything without an API key.
+
+`engine/data/` is where files live that aren't source code: put recordings in `data/raw/`, and outputs go to `data/out/` (the default when you parse several files or several formats without `-o`). Shared recipes are stored in `data/recipes/`. Everything in it is git-ignored.
 
 To run the web app in development, start `uv run rcpy serve` in `engine/` and `npm run dev` in `web/`, then open the URL Vite prints (usually `http://localhost:5173`). After `npm run build` in `web/`, `rcpy serve` also serves the built app itself.
 

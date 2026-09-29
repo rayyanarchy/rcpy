@@ -56,5 +56,11 @@ coverage/
 __pycache__/
 .pytest_cache/
 *.egg-info/
-rcpy-out/
-/engine/data/
+
+# engine/data: recordings, outputs and shared recipes stay local; only the folders are tracked
+!/engine/data/out/
+/engine/data/raw/*
+/engine/data/out/*
+/engine/data/recipes/
+!/engine/data/raw/.gitkeep
+!/engine/data/out/.gitkeep

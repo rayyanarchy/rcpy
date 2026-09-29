@@ -96,3 +96,13 @@ def test_gemini_network_failure_is_a_clean_error(tmp_path, monkeypatch):
     assert "could not reach Gemini" in res.output
     assert "Traceback" not in res.output
 
+
+def test_default_output_dir_is_data_out(tmp_path, monkeypatch):
+    monkeypatch.setenv("DEMO_MODE", "true")
+    monkeypatch.setenv("DATA_DIR", str(tmp_path / "data"))
+    a, b = tmp_path / "a.mp3", tmp_path / "b.mp3"
+    a.write_bytes(b"x")
+    b.write_bytes(b"x")
+    res = runner.invoke(app, ["parse", str(a), str(b)])  # two files, no -o
+    assert res.exit_code == 0
+    assert sorted(p.name for p in (tmp_path / "data" / "out").iterdir()) == ["a.json", "b.json"]

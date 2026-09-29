@@ -44,7 +44,10 @@ def parse(
     formats: Annotated[str, typer.Option("-f", "--format", help="Comma-separated: json,md,html")] = "json",
     out: Annotated[
         Path | None,
-        typer.Option("-o", "--out", help="Output directory. Without it, one file + one format prints to stdout."),
+        typer.Option(
+            "-o", "--out",
+            help="Output directory. Without it, one file + one format prints to stdout; otherwise files go to <DATA_DIR>/out.",
+        ),
     ] = None,
     share: Annotated[
         bool, typer.Option("--share", help="Publish to the share server and print the link (expires in 1h).")
@@ -55,7 +58,7 @@ def parse(
     settings = get_settings()
     to_stdout = out is None and len(files) == 1 and len(fmts) == 1
     if out is None and not to_stdout:
-        out = Path("rcpy-out")
+        out = Path(settings.data_dir) / "out"
     if out is not None:
         out.mkdir(parents=True, exist_ok=True)
 
