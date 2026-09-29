@@ -1,0 +1,77 @@
+"""Command line interface: `rcpy parse <files...>`."""
+
+from pathlib import Path
+from typing import Annotated
+
+import typer
+from rich.console import Console
+
+from rcpy import __version__
+from rcpy.config import get_settings
+from rcpy.errors import RcpyError
+from rcpy.formatters import FORMATS, render
+from rcpy.strategies.single import parse_audio
+
+app = typer.Typer(help="Turn dictated recipe audio into structured recipes.", no_args_is_help=True)
+err = Console(stderr=True)  # progress and errors go to stderr so stdout stays pipe-friendly
+
+
+def _version(value: bool) -> None:
+    if value:
+        typer.echo(f"rcpy {__version__}")
+        raise typer.Exit()
+
+
+@app.callback()
+def main(
+    version: Annotated[bool, typer.Option("--version", callback=_version, is_eager=True)] = False,
+) -> None:
+    pass
+
+
+def _parse_formats(value: str) -> list[str]:
+    formats = [f.strip().lower() for f in value.split(",") if f.strip()]
+    bad = [f for f in formats if f not in FORMATS]
+    if bad or not formats:
+        raise typer.BadParameter(f"choose from: {', '.join(FORMATS)}")
+    return list(dict.fromkeys(formats))  # de-duplicate, keep order
+
+
+@app.command()
+def parse(
+    files: Annotated[list[Path], typer.Argument(help="Audio file(s) to parse.")],
+    formats: Annotated[str, typer.Option("-f", "--format", help="Comma-separated: json,md,html")] = "json",
+    out: Annotated[
+        Path | None,
+        typer.Option("-o", "--out", help="Output directory. Without it, one file + one format prints to stdout."),
+    ] = None,
+) -> None:
+    """Parse audio recipe(s) into json / md / html."""
+    fmts = _parse_formats(formats)
+    settings = get_settings()
+    to_stdout = out is None and len(files) == 1 and len(fmts) == 1
+    if out is None and not to_stdout:
+        out = Path("rcpy-out")
+    if out is not None:
+        out.mkdir(parents=True, exist_ok=True)
+
+    failures = 0
+    for path in files:
+        try:
+            with err.status(f"Parsing {path.name}..."):
+                result = parse_audio(path, settings)
+        except RcpyError as exc:
+            err.print(f"[red]error:[/red] {exc}")
+            failures += 1
+            continue
+
+        if to_stdout:
+            typer.echo(render(result, fmts[0]), nl=False)
+            continue
+        for fmt in fmts:
+            target = out / f"{path.stem}.{fmt}"
+            target.write_text(render(result, fmt), encoding="utf-8")
+            err.print(f"[green]wrote[/green] {target}")
+
+    if failures:
+        raise typer.Exit(code=1)
