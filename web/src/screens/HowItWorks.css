@@ -1,0 +1,263 @@
+.how__intro {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 760px;
+  padding: 96px 0 64px;
+}
+
+.how__kicker {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.how__title {
+  font-size: clamp(44px, 7vw, 72px);
+  line-height: 1;
+}
+
+.how__lede {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.how__pipeline {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 40px;
+  margin: 0;
+  padding: 24px 0 96px;
+  list-style: none;
+  counter-reset: none;
+}
+
+.how__pipeline li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 150px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.how__pipeline li.is-you {
+  border-color: var(--ink);
+  background: var(--bg);
+}
+
+/* The arrow between stages. */
+.how__pipeline li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -30px;
+  width: 20px;
+  height: 1px;
+  background: var(--line-strong);
+}
+
+.how__pipeline li:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: calc(50% - 4px);
+  right: -30px;
+  width: 7px;
+  height: 7px;
+  border-top: 1px solid var(--line-strong);
+  border-right: 1px solid var(--line-strong);
+  transform: rotate(45deg);
+}
+
+.how__n {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.how__stage {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.how__detail {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.how__section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 96px;
+}
+
+.how__section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.how__section-head h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.how__meta {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.how__scope {
+  align-self: flex-start;
+}
+
+.how__table-wrap {
+  overflow-x: auto;
+}
+
+.how__table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.how__table th,
+.how__table td {
+  padding: 14px 16px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.how__table thead tr {
+  border-bottom: 1px solid var(--ink);
+}
+
+.how__table thead th {
+  font-weight: 400;
+  color: var(--ink-2);
+}
+
+.how__table thead th:first-child,
+.how__table tbody th {
+  padding-left: 0;
+}
+
+.how__table tbody tr {
+  border-bottom: 1px solid var(--line);
+}
+
+.how__table tbody th {
+  font-weight: 400;
+}
+
+.how__table tbody th span {
+  display: block;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.how__table td {
+  color: var(--ink-2);
+}
+
+.how__table .is-shipped {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.how__shipped {
+  font-weight: 400;
+  color: var(--ink-3);
+}
+
+.how__sd {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-3);
+}
+
+.how__empty {
+  margin: 0;
+  padding: 28px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 16px;
+  color: var(--ink-2);
+}
+
+.how__method {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+.how__method a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.how__failures {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.how__failures li {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  font-size: 15px;
+}
+
+.how__cta {
+  padding-bottom: 96px;
+}
+
+@media (max-width: 900px) {
+  .how__pipeline {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .how__pipeline li::before,
+  .how__pipeline li::after {
+    display: none;
+  }
+
+  .how__failures {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .how__intro {
+    padding: 48px 0 40px;
+  }
+
+  .how__pipeline {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .how__pipeline li {
+    min-height: 0;
+  }
+}

@@ -28,6 +28,14 @@ export interface Summary {
   metrics: Metrics;
   spread: Partial<Record<keyof Metrics, number | null>>;
   by_tag: Record<string, Metrics>;
+  per_case: {
+    case_id: string;
+    repeat: number;
+    error: string | null;
+    missing: string[];
+    extra: string[];
+    wrong_quantity: string[];
+  }[];
   performance: {
     seconds_mean: number | null;
     seconds_p95: number | null;
