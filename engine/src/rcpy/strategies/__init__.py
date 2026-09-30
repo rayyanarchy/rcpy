@@ -24,6 +24,13 @@ STRATEGIES: dict[str, Strategy] = {
     "staged-lite": staged.run_lite,
 }
 
+# The model calls each strategy makes, in order, so a client can show progress up front.
+STAGES: dict[str, list[str]] = {
+    "single": ["single"],
+    "staged": ["transcribe", "extract", "verify"],
+    "staged-lite": ["transcribe", "extract"],
+}
+
 # Gemini rejects some types, so map by extension ourselves instead of guessing.
 AUDIO_MIME_TYPES = {
     ".mp3": "audio/mp3",
@@ -64,6 +71,10 @@ def parse_audio(path: Path, settings: Settings, strategy: str | None = None, tra
         raise RcpyError(f"{path.name}: {size_mb:.1f} MB exceeds the {settings.max_audio_mb:g} MB limit")
 
     if settings.demo_mode:
+        if trace is not None:  # walk through the stages so progress UIs work without a key
+            for stage in STAGES[name]:
+                with trace.stage(stage, "demo"):
+                    pass
         return DEMO.model_copy(deep=True)
 
     return run(Gemini(settings, path.name, trace), path, mime)

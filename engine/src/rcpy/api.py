@@ -2,14 +2,17 @@
 
 import json
 import logging
+import queue
 import re
 import tempfile
+import threading
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from rcpy.config import Settings, get_settings
@@ -18,7 +21,8 @@ from rcpy.errors import RcpyError
 from rcpy.formatters import PageInfo, to_crumb, to_html, to_markdown
 from rcpy.ratelimit import RateLimiter
 from rcpy.storage import Store, get_store
-from rcpy.strategies import parse_audio
+from rcpy.strategies import STAGES, parse_audio
+from rcpy.trace import Stage, Trace
 
 log = logging.getLogger("rcpy")
 
@@ -113,14 +117,46 @@ def create_app(settings: Settings | None = None, store: Store | None = None) -> 
     # Plain `def` (not async): FastAPI runs these in a threadpool, which is
     # right for the blocking Gemini call.
     @app.post("/api/process", response_model=DraftResponse, dependencies=[Depends(process_limit)])
-    def process(audio: Annotated[UploadFile | None, File()] = None):
+    def process(audio: Annotated[UploadFile | None, File()] = None, stream: bool = False):
+        """Audio in, draft out. With ?stream=true the response is NDJSON progress
+        events ending in a `draft` or `error` event, so the UI can show each stage."""
         if audio is None:
             raise RcpyError("Choose an audio file first.")
         path = _save_upload(audio, settings)
+        if stream:
+            return StreamingResponse(_process_events(path), media_type="application/x-ndjson")
         try:
             return {"draft": RecipeDraft.from_result(parse_audio(path, settings))}
         finally:
             path.unlink(missing_ok=True)
+
+    def _process_events(path: Path) -> Iterator[str]:
+        events: queue.Queue[dict | None] = queue.Queue()
+
+        def on_event(stage: Stage, status: str) -> None:
+            event = {"event": "stage", "name": stage.name, "status": status}
+            if status == "done":
+                event["seconds"] = round(stage.seconds, 2)
+            events.put(event)
+
+        def work() -> None:
+            try:
+                result = parse_audio(path, settings, trace=Trace(on_event=on_event))
+                draft = RecipeDraft.from_result(result).model_dump(mode="json", by_alias=True)
+                events.put({"event": "draft", "draft": draft})
+            except RcpyError as exc:
+                events.put({"event": "error", "error": str(exc), "status": exc.status})
+            except Exception:
+                log.exception("processing failed")
+                events.put({"event": "error", "error": "Something went wrong. Please try again.", "status": 500})
+            finally:
+                path.unlink(missing_ok=True)
+                events.put(None)
+
+        threading.Thread(target=work, daemon=True).start()
+        yield json.dumps({"event": "plan", "stages": STAGES.get(settings.strategy, [])}) + "\n"
+        while (event := events.get()) is not None:
+            yield json.dumps(event) + "\n"
 
     @app.post("/api/recipes", status_code=201, response_model=PublishResponse, dependencies=[Depends(write_limit)])
     def create_recipe(draft: RecipeDraft, request: Request):

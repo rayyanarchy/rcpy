@@ -106,7 +106,7 @@ cd engine && uv run pytest
 
 | Method | Route | Description |
 | --- | --- | --- |
-| `POST` | `/api/process` | Upload audio in the `audio` field and get a recipe draft back |
+| `POST` | `/api/process` | Upload audio in the `audio` field and get a recipe draft back. Add `?stream=true` for NDJSON progress events (`plan`, `stage`, then `draft` or `error`) |
 | `POST` | `/api/recipes` | Save a recipe |
 | `GET` | `/api/recipes/{slug}` | Fetch a saved recipe |
 | `PUT` | `/api/recipes/{slug}` | Update a saved recipe |

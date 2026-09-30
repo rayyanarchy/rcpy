@@ -128,3 +128,32 @@ def test_process_is_rate_limited(client):
     codes = [upload(client).status_code for _ in range(11)]
     assert codes[:10] == [200] * 10
     assert codes[10] == 429
+
+
+def _stream(client):
+    res = client.post("/api/process?stream=true", files={"audio": ("r.webm", b"demo", "audio/webm")})
+    assert res.status_code == 200
+    assert res.headers["content-type"].startswith("application/x-ndjson")
+    return [json.loads(line) for line in res.text.splitlines()]
+
+
+def test_process_stream_reports_each_stage_then_the_draft(data_dir):
+    settings = Settings(demo_mode=True, strategy="staged", data_dir=str(data_dir), _env_file=None)
+    events = _stream(TestClient(create_app(settings)))
+    assert events[0] == {"event": "plan", "stages": ["transcribe", "extract", "verify"]}
+    stages = [(e["name"], e["status"]) for e in events if e["event"] == "stage"]
+    assert stages == [
+        ("transcribe", "start"), ("transcribe", "done"),
+        ("extract", "start"), ("extract", "done"),
+        ("verify", "start"), ("verify", "done"),
+    ]  # fmt: skip
+    assert events[-1]["event"] == "draft"
+    assert events[-1]["draft"]["name"] == "Aloo Gobi"
+    assert "sourceLanguage" in events[-1]["draft"]  # camelCase on the wire, like the plain response
+
+
+def test_process_stream_ends_with_error_event(data_dir):
+    settings = Settings(demo_mode=True, strategy="nope", data_dir=str(data_dir), _env_file=None)
+    events = _stream(TestClient(create_app(settings)))
+    assert events[-1]["event"] == "error"
+    assert "unknown strategy" in events[-1]["error"]

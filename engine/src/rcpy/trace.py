@@ -5,7 +5,7 @@ evals use it for latency and cost; normal CLI/API calls can ignore it.
 """
 
 import time
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from typing import Any
@@ -34,16 +34,24 @@ class Stage:
 @dataclass
 class Trace:
     stages: list[Stage] = field(default_factory=list)
+    # Called with (stage, "start" | "done") so the API can stream progress.
+    on_event: Callable[[Stage, str], None] | None = field(default=None, repr=False, compare=False)
+
+    def emit(self, stage: Stage, status: str) -> None:
+        if self.on_event:
+            self.on_event(stage, status)
 
     @contextmanager
     def stage(self, name: str, model: str) -> Iterator[Stage]:
         stage = Stage(name=name, model=model)
+        self.emit(stage, "start")
         start = time.perf_counter()
         try:
             yield stage
         finally:
             stage.seconds = time.perf_counter() - start
             self.stages.append(stage)
+        self.emit(stage, "done")  # only reached when the call succeeded
 
     @property
     def seconds(self) -> float:
