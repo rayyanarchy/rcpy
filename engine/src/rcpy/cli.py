@@ -11,7 +11,7 @@ from rcpy.config import get_settings
 from rcpy.errors import RcpyError
 from rcpy.formatters import FORMATS, render
 from rcpy.share import share_recipe
-from rcpy.strategies.single import parse_audio
+from rcpy.strategies import parse_audio
 
 app = typer.Typer(help="Turn dictated recipe audio into structured recipes.", no_args_is_help=True)
 err = Console(stderr=True)  # progress and errors go to stderr so stdout stays pipe-friendly
@@ -49,6 +49,9 @@ def parse(
             help="Output directory. Without it, one file + one format prints to stdout; otherwise files go to <DATA_DIR>/out.",
         ),
     ] = None,
+    strategy: Annotated[
+        str | None, typer.Option("-s", "--strategy", help="single, staged or staged-lite (default: STRATEGY).")
+    ] = None,
     share: Annotated[
         bool, typer.Option("--share", help="Publish to the share server and print the link (expires in 1h).")
     ] = False,
@@ -66,7 +69,7 @@ def parse(
     for path in files:
         try:
             with err.status(f"Parsing {path.name}..."):
-                result = parse_audio(path, settings)
+                result = parse_audio(path, settings, strategy=strategy)
         except RcpyError as exc:
             err.print(f"[red]error:[/red] {exc}")
             failures += 1

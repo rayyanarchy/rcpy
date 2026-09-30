@@ -106,3 +106,12 @@ def test_default_output_dir_is_data_out(tmp_path, monkeypatch):
     res = runner.invoke(app, ["parse", str(a), str(b)])  # two files, no -o
     assert res.exit_code == 0
     assert sorted(p.name for p in (tmp_path / "data" / "out").iterdir()) == ["a.json", "b.json"]
+
+
+def test_unknown_strategy_is_a_clean_error(tmp_path, monkeypatch):
+    monkeypatch.setenv("DEMO_MODE", "true")
+    audio = tmp_path / "a.mp3"
+    audio.write_bytes(b"x")
+    res = runner.invoke(app, ["parse", str(audio), "-s", "nope"])
+    assert res.exit_code == 1
+    assert "unknown strategy" in res.output

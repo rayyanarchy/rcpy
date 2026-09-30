@@ -17,7 +17,7 @@ from rcpy.errors import RcpyError
 from rcpy.formatters import PageInfo, to_crumb, to_html, to_markdown
 from rcpy.ratelimit import RateLimiter
 from rcpy.storage import Store, get_store
-from rcpy.strategies.single import parse_audio
+from rcpy.strategies import parse_audio
 
 log = logging.getLogger("rcpy")
 
