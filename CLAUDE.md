@@ -20,9 +20,9 @@ uv run rcpy serve --reload                # API on http://127.0.0.1:3000
 
 Set `DEMO_MODE=true` to skip Gemini entirely (returns a canned recipe) — useful for exercising the CLI/API/web flow without an API key.
 
-Web (run from `web/`, Node 22.12+): `npm run dev` (Vite on :5173, proxies `/api`, `/r`, `/health` to :3000 — so `rcpy serve` must be running), `npm run build`. There is no JS linter or test suite configured yet.
+Web (run from `web/`, Node 22.12+): `npm run dev` (Vite on :5173, proxies `/api`, `/r`, `/health` to :3000 — so `rcpy serve` must be running), `npm run build` (typechecks with `tsc` first), `npm test` (vitest).
 
-CI (`.github/workflows/ci.yml`) runs ruff check, ruff format --check and pytest for the engine, and `npm run build` for the web app.
+CI (`.github/workflows/ci.yml`) runs ruff check, ruff format --check and pytest for the engine, and `npm test` + `npm run build` for the web app.
 
 ## Architecture
 
