@@ -1,0 +1,102 @@
+.recording {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.recording__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+}
+
+.recording__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.recording__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--red);
+  animation: recording-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes recording-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.recording__clock {
+  font-size: clamp(56px, 10vw, 88px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.recording__wave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 100%;
+  max-width: 420px;
+  height: 96px;
+}
+
+.recording__wave span {
+  flex: 1;
+  max-width: 4px;
+  min-height: 4px;
+  border-radius: 3px;
+  background: var(--ink);
+  transition: height 80ms linear;
+}
+
+.recording__wave span:nth-child(-n + 8) {
+  opacity: 0.3;
+}
+
+.recording__hint {
+  max-width: 300px;
+  margin: 0;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.recording__controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 0 48px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.recording__stop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 84px;
+  height: 84px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.recording__stop span[aria-hidden] {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--red);
+}
