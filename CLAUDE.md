@@ -12,6 +12,7 @@ Engine (run from `engine/`, uses `uv`, Python 3.13+):
 uv sync --all-extras                      # install, including the FastAPI/psycopg "api" extra
 uv run pytest                             # all tests
 uv run pytest tests/test_api.py::test_health   # single test
+uv run ruff check src tests && uv run ruff format src tests   # lint + format (CI enforces both)
 uv run rcpy parse data/raw/recipe.m4a     # one file + one format -> stdout
 uv run rcpy parse a.mp3 b.wav -f json,md,html -o data/out/
 uv run rcpy serve --reload                # API on http://127.0.0.1:3000
@@ -19,7 +20,9 @@ uv run rcpy serve --reload                # API on http://127.0.0.1:3000
 
 Set `DEMO_MODE=true` to skip Gemini entirely (returns a canned recipe) — useful for exercising the CLI/API/web flow without an API key.
 
-Web (run from `web/`, Node 22.12+): `npm run dev` (Vite on :5173, proxies `/api`, `/r`, `/health` to :3000 — so `rcpy serve` must be running), `npm run build`. There is no linter or JS test suite configured.
+Web (run from `web/`, Node 22.12+): `npm run dev` (Vite on :5173, proxies `/api`, `/r`, `/health` to :3000 — so `rcpy serve` must be running), `npm run build`. There is no JS linter or test suite configured yet.
+
+CI (`.github/workflows/ci.yml`) runs ruff check, ruff format --check and pytest for the engine, and `npm run build` for the web app.
 
 ## Architecture
 
