@@ -25,7 +25,12 @@ def test_parse_batch_writes_files(tmp_path, monkeypatch):
     res = runner.invoke(app, ["parse", str(a), str(b), "-f", "json,md,html", "-o", str(out)])
     assert res.exit_code == 0
     assert sorted(p.name for p in out.iterdir()) == [
-        "a.html", "a.json", "a.md", "b.html", "b.json", "b.md",
+        "a.html",
+        "a.json",
+        "a.md",
+        "b.html",
+        "b.json",
+        "b.md",
     ]
 
 

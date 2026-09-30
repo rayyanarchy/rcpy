@@ -27,9 +27,7 @@ class GoldRecipe(BaseModel):
 
 class GoldCase(BaseModel):
     id: str
-    reviewed: bool = Field(
-        default=False, description="Set to true only after checking every field against the audio."
-    )
+    reviewed: bool = Field(default=False, description="Set to true only after checking every field against the audio.")
     language: str = Field(default="", description="What was spoken, e.g. 'en', 'hi-en', 'ur-en'.")
     speaker: str = ""
     tags: list[str] = Field(default=[], description="Free-form labels to slice results by, e.g. 'ranges'.")
@@ -49,9 +47,7 @@ class GoldCase(BaseModel):
                 servings=r.servings,
                 prep_minutes=r.prep_minutes,
                 cook_minutes=r.cook_minutes,
-                ingredients=[
-                    GoldIngredient(name=i.name, amount=i.amount, unit=i.unit) for i in r.ingredients
-                ],
+                ingredients=[GoldIngredient(name=i.name, amount=i.amount, unit=i.unit) for i in r.ingredients],
                 steps=[s.text for s in r.steps],
             ),
         )

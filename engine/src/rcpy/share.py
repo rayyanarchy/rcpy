@@ -44,4 +44,3 @@ def share_recipe(result: ParseResult, share_url: str, client: httpx.Client | Non
 
     data = response.json()
     return ShareLinks(url=data["url"], crumb_url=data["crumbUrl"], markdown_url=data["markdownUrl"])
-

@@ -5,6 +5,7 @@ import logging
 import re
 import tempfile
 from pathlib import Path
+from typing import Annotated
 
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
@@ -112,7 +113,7 @@ def create_app(settings: Settings | None = None, store: Store | None = None) -> 
     # Plain `def` (not async): FastAPI runs these in a threadpool, which is
     # right for the blocking Gemini call.
     @app.post("/api/process", response_model=DraftResponse, dependencies=[Depends(process_limit)])
-    def process(audio: UploadFile | None = File(None)):
+    def process(audio: Annotated[UploadFile | None, File()] = None):
         if audio is None:
             raise RcpyError("Choose an audio file first.")
         path = _save_upload(audio, settings)
@@ -121,9 +122,7 @@ def create_app(settings: Settings | None = None, store: Store | None = None) -> 
         finally:
             path.unlink(missing_ok=True)
 
-    @app.post(
-        "/api/recipes", status_code=201, response_model=PublishResponse, dependencies=[Depends(write_limit)]
-    )
+    @app.post("/api/recipes", status_code=201, response_model=PublishResponse, dependencies=[Depends(write_limit)])
     def create_recipe(draft: RecipeDraft, request: Request):
         recipe = store.save(draft)
         return {"recipe": recipe, **_links(request, recipe.slug)}

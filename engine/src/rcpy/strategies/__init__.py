@@ -51,9 +51,7 @@ def guess_audio_mime(path: Path) -> str:
     raise RcpyError(f"{path.name}: unsupported audio type. Supported: {supported}")
 
 
-def parse_audio(
-    path: Path, settings: Settings, strategy: str | None = None, trace: Trace | None = None
-) -> ParseResult:
+def parse_audio(path: Path, settings: Settings, strategy: str | None = None, trace: Trace | None = None) -> ParseResult:
     name = strategy or settings.strategy
     run = STRATEGIES.get(name)
     if run is None:

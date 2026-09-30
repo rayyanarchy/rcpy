@@ -71,9 +71,7 @@ def _slug(name: str) -> str:
 @app.command()
 def add(
     files: Annotated[list[Path], typer.Argument(help="Recording(s) to add as eval cases.")],
-    bootstrap: Annotated[
-        bool, typer.Option(help="Pre-fill gold.json from a model run, to correct by hand.")
-    ] = True,
+    bootstrap: Annotated[bool, typer.Option(help="Pre-fill gold.json from a model run, to correct by hand.")] = True,
     strategy: Annotated[str, typer.Option("-s", "--strategy", help="Strategy used to pre-fill.")] = "single",
 ) -> None:
     """Add recordings as cases. Each gets a gold.json to correct, then mark reviewed."""
@@ -120,8 +118,12 @@ def list_() -> None:
     table = Table("case", "reviewed", "language", "ingredients", "steps", "tags")
     for _, c in cases:
         table.add_row(
-            c.id, "[green]yes[/green]" if c.reviewed else "[yellow]no[/yellow]", c.language,
-            str(len(c.recipe.ingredients)), str(len(c.recipe.steps)), ", ".join(c.tags),
+            c.id,
+            "[green]yes[/green]" if c.reviewed else "[yellow]no[/yellow]",
+            c.language,
+            str(len(c.recipe.ingredients)),
+            str(len(c.recipe.steps)),
+            ", ".join(c.tags),
         )
     out.print(table)
     done = sum(c.reviewed for _, c in cases)

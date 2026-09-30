@@ -112,7 +112,11 @@ def run(gemini: Gemini, path: Path, mime: str) -> ParseResult:
     body = RecipeBody(**draft.recipe.model_dump(exclude={"source_language", "english_transcript"}))
     checked = gemini.generate(
         "verify",
-        [VERIFY, _transcript_text(transcript), "Recipe to check:\n" + json.dumps(body.model_dump(mode="json"), indent=1)],
+        [
+            VERIFY,
+            _transcript_text(transcript),
+            "Recipe to check:\n" + json.dumps(body.model_dump(mode="json"), indent=1),
+        ],
         RecipeBody,
     )
     return _assemble(transcript, checked)

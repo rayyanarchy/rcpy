@@ -10,11 +10,104 @@ from rcpy.schema import Recipe
 
 # Function words that carry no cooking content, for the step-coverage metric.
 STOPWORDS = set(
-    """a about after again all also an and any are as at be been before being but by can do does
-    each for from further has have if in into is it its just let more most much no not now of off on
-    once only or other our out over own same should so some such than that the their them then there
-    these they this those through to too until up very was we well were what when where which while
-    will with you your i me my he she his her us one""".split()
+    [
+        "a",
+        "about",
+        "after",
+        "again",
+        "all",
+        "also",
+        "an",
+        "and",
+        "any",
+        "are",
+        "as",
+        "at",
+        "be",
+        "been",
+        "before",
+        "being",
+        "but",
+        "by",
+        "can",
+        "do",
+        "does",
+        "each",
+        "for",
+        "from",
+        "further",
+        "has",
+        "have",
+        "if",
+        "in",
+        "into",
+        "is",
+        "it",
+        "its",
+        "just",
+        "let",
+        "more",
+        "most",
+        "much",
+        "no",
+        "not",
+        "now",
+        "of",
+        "off",
+        "on",
+        "once",
+        "only",
+        "or",
+        "other",
+        "our",
+        "out",
+        "over",
+        "own",
+        "same",
+        "should",
+        "so",
+        "some",
+        "such",
+        "than",
+        "that",
+        "the",
+        "their",
+        "them",
+        "then",
+        "there",
+        "these",
+        "they",
+        "this",
+        "those",
+        "through",
+        "to",
+        "too",
+        "until",
+        "up",
+        "very",
+        "was",
+        "we",
+        "well",
+        "were",
+        "what",
+        "when",
+        "where",
+        "which",
+        "while",
+        "will",
+        "with",
+        "you",
+        "your",
+        "i",
+        "me",
+        "my",
+        "he",
+        "she",
+        "his",
+        "her",
+        "us",
+        "one",
+    ]
 )
 
 WORD_RE = re.compile(r"[a-z]+")
@@ -79,7 +172,9 @@ def score_case(case_id: str, gold: GoldRecipe, pred: Recipe | None, error: str |
             s.correct_quantities += 1
             s.flagged_right += p.uncertain
         else:
-            s.wrong_quantity.append(f"{g.name}: expected {_fmt(g.amount, g.amount_max, g.unit)}, got {_fmt(p.amount, None, p.unit)}")
+            s.wrong_quantity.append(
+                f"{g.name}: expected {_fmt(g.amount, g.amount_max, g.unit)}, got {_fmt(p.amount, None, p.unit)}"
+            )
             if p.uncertain:
                 s.flagged_wrong += 1
             else:

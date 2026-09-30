@@ -33,16 +33,37 @@ def test_crumb_matches_observed_shape(result):
     now = datetime.now(UTC)
     draft = RecipeDraft.from_result(result)
     stored = StoredRecipe.model_validate(
-        {**draft.model_dump(), "slug": "sample_12345", "uuid": "8f14e45f-ceea-467a-9575-1c1c9f2a3b4d",
-         "created_at": now, "updated_at": now, "expires_at": now}
+        {
+            **draft.model_dump(),
+            "slug": "sample_12345",
+            "uuid": "8f14e45f-ceea-467a-9575-1c1c9f2a3b4d",
+            "created_at": now,
+            "updated_at": now,
+            "expires_at": now,
+        }
     )
     crumb = to_crumb(stored, "https://rcpy.example")
 
-    assert sorted(crumb) == sorted([
-        "tags", "cookingDuration", "webLink", "duration", "images", "uuid", "serves", "ingredients",
-        "sourceImage", "name", "steps", "folderIDs", "nutritionalInfo", "isPublicRecipe",
-        "defaultScale", "sourceName",
-    ])
+    assert sorted(crumb) == sorted(
+        [
+            "tags",
+            "cookingDuration",
+            "webLink",
+            "duration",
+            "images",
+            "uuid",
+            "serves",
+            "ingredients",
+            "sourceImage",
+            "name",
+            "steps",
+            "folderIDs",
+            "nutritionalInfo",
+            "isPublicRecipe",
+            "defaultScale",
+            "sourceName",
+        ]
+    )
     assert crumb["uuid"] == "8F14E45F-CEEA-467A-9575-1C1C9F2A3B4D"
     assert crumb["sourceName"] == "rcpy.example"
     assert crumb["ingredients"][0]["quantity"] == {"quantityType": "TABLESPOON", "amount": 2}

@@ -57,12 +57,9 @@ def to_markdown(result: ParseResult, link: str | None = None) -> str:
 
     flag = " _(uncertain)_"
     ingredients = "\n".join(
-        f"- [ ] {' '.join(p for p in (i.quantity, i.name) if p)}{flag if i.uncertain else ''}"
-        for i in r.ingredients
+        f"- [ ] {' '.join(p for p in (i.quantity, i.name) if p)}{flag if i.uncertain else ''}" for i in r.ingredients
     )
-    steps = "\n\n".join(
-        f"{n}. {s.text}{flag if s.uncertain else ''}" for n, s in enumerate(r.steps, 1)
-    )
+    steps = "\n\n".join(f"{n}. {s.text}{flag if s.uncertain else ''}" for n, s in enumerate(r.steps, 1))
 
     parts = [f"# {r.name}"]
     if r.description:
@@ -90,18 +87,11 @@ def to_html(result: ParseResult, page: PageInfo | None = None) -> str:
         if value is not None
     )
     ingredients = "".join(
-        f'<li{" class=uncertain" if i.uncertain else ""}>'
-        f'<span class="qty">{e(i.quantity)}</span> {e(i.name)}</li>'
+        f'<li{" class=uncertain" if i.uncertain else ""}><span class="qty">{e(i.quantity)}</span> {e(i.name)}</li>'
         for i in r.ingredients
     )
-    steps = "".join(
-        f'<li{" class=uncertain" if s.uncertain else ""}>{e(s.text)}</li>' for s in r.steps
-    )
-    notes = (
-        "<h2>Notes</h2><ul>" + "".join(f"<li>{e(n)}</li>" for n in r.notes) + "</ul>"
-        if r.notes
-        else ""
-    )
+    steps = "".join(f"<li{' class=uncertain' if s.uncertain else ''}>{e(s.text)}</li>" for s in r.steps)
+    notes = "<h2>Notes</h2><ul>" + "".join(f"<li>{e(n)}</li>" for n in r.notes) + "</ul>" if r.notes else ""
     description = f'<p class="desc">{e(r.description)}</p>' if r.description else ""
 
     head_extra = actions = ""
@@ -179,9 +169,7 @@ def to_json_ld(result: ParseResult, page: PageInfo) -> dict:
         "cookTime": _iso_minutes(r.cook_minutes),
         "totalTime": _iso_minutes(total) if total else None,
         "recipeIngredient": [" ".join(p for p in (i.quantity, i.name) if p) for i in r.ingredients],
-        "recipeInstructions": [
-            {"@type": "HowToStep", "position": n, "text": s.text} for n, s in enumerate(r.steps, 1)
-        ],
+        "recipeInstructions": [{"@type": "HowToStep", "position": n, "text": s.text} for n, s in enumerate(r.steps, 1)],
         "keywords": ["dictated recipe", "family recipe", "voice recipe"],
     }
     return {k: v for k, v in data.items() if v is not None}
@@ -207,9 +195,7 @@ def to_crumb(recipe: StoredRecipe, base_url: str) -> dict:
             {
                 "order": order,
                 "ingredient": {
-                    "name": " · ".join(
-                        p for p in (item.name, item.quantity if item.amount is None else "") if p
-                    ),
+                    "name": " · ".join(p for p in (item.name, item.quantity if item.amount is None else "") if p),
                     "uuid": str(item.id).upper(),
                 },
                 "uuid": str(secrets.token_hex(16)).upper(),

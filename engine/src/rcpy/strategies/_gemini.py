@@ -6,7 +6,7 @@ turns SDK/network failures into user-safe `RcpyError`s.
 
 import logging
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from pathlib import Path
 
 import httpx
@@ -62,10 +62,8 @@ class Gemini:
             yield uploaded
         finally:
             if uploaded is not None and uploaded.name:
-                try:
+                with suppress(Exception):  # cleanup is best-effort
                     self.client.files.delete(name=uploaded.name)
-                except Exception:  # cleanup is best-effort
-                    pass
 
     def generate[M: BaseModel](self, stage: str, contents: list, schema: type[M], model: str | None = None) -> M:
         """One structured call: `contents` in, a validated `schema` instance out."""

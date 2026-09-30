@@ -47,7 +47,8 @@ def parse(
     out: Annotated[
         Path | None,
         typer.Option(
-            "-o", "--out",
+            "-o",
+            "--out",
             help="Output directory. Without it, one file + one format prints to stdout; otherwise files go to <DATA_DIR>/out.",
         ),
     ] = None,
@@ -109,7 +110,7 @@ def serve(
     try:
         import fastapi  # noqa: F401
         import uvicorn
-    except ImportError:
+    except ImportError as exc:
         err.print("[red]error:[/red] the API needs extra packages. Run: uv sync --all-extras")
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from exc
     uvicorn.run("rcpy.api:create_app", factory=True, host=host, port=port, reload=reload)

@@ -9,9 +9,7 @@ from rcpy.share import share_recipe
 
 
 def test_share_round_trip(result, tmp_path):
-    settings = Settings(
-        demo_mode=True, data_dir=str(tmp_path), public_base_url="https://rcpy.example", _env_file=None
-    )
+    settings = Settings(demo_mode=True, data_dir=str(tmp_path), public_base_url="https://rcpy.example", _env_file=None)
     client = TestClient(create_app(settings))
 
     links = share_recipe(result, "http://testserver", client=client)
@@ -43,4 +41,3 @@ def test_share_unreachable_server(result):
     client = httpx.Client(transport=httpx.MockTransport(handler))
     with pytest.raises(RcpyError, match="could not reach"):
         share_recipe(result, "https://rcpy.example", client=client)
-

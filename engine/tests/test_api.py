@@ -15,9 +15,7 @@ def data_dir(tmp_path):
 
 @pytest.fixture
 def client(data_dir):
-    settings = Settings(
-        demo_mode=True, data_dir=str(data_dir), public_base_url="https://rcpy.example", _env_file=None
-    )
+    settings = Settings(demo_mode=True, data_dir=str(data_dir), public_base_url="https://rcpy.example", _env_file=None)
     return TestClient(create_app(settings))
 
 
