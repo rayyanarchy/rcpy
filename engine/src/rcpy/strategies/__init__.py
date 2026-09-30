@@ -75,6 +75,17 @@ def parse_audio(path: Path, settings: Settings, strategy: str | None = None, tra
             for stage in STAGES[name]:
                 with trace.stage(stage, "demo"):
                     pass
+                if stage == "transcribe":
+                    r = DEMO.recipe
+                    trace.notify(
+                        staged.transcript_event(
+                            staged.Transcript(
+                                source_language=r.source_language,
+                                original_transcript=DEMO.original_transcript,
+                                english_transcript=r.english_transcript,
+                            )
+                        )
+                    )
         return DEMO.model_copy(deep=True)
 
     return run(Gemini(settings, path.name, trace), path, mime)

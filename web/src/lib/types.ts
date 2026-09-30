@@ -60,5 +60,6 @@ export interface PublishResponse {
 export type ProcessEvent =
   | { event: "plan"; stages: string[] }
   | { event: "stage"; name: string; status: "start" | "done"; seconds?: number }
+  | { event: "transcript"; sourceLanguage: string; originalTranscript: string; englishTranscript: string }
   | { event: "draft"; draft: RecipeDraft }
   | { event: "error"; error: string; status: number };

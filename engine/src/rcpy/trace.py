@@ -34,24 +34,25 @@ class Stage:
 @dataclass
 class Trace:
     stages: list[Stage] = field(default_factory=list)
-    # Called with (stage, "start" | "done") so the API can stream progress.
-    on_event: Callable[[Stage, str], None] | None = field(default=None, repr=False, compare=False)
+    # Receives progress events (dicts) as they happen, so the API can stream them.
+    listener: Callable[[dict], None] | None = field(default=None, repr=False, compare=False)
 
-    def emit(self, stage: Stage, status: str) -> None:
-        if self.on_event:
-            self.on_event(stage, status)
+    def notify(self, event: dict) -> None:
+        if self.listener:
+            self.listener(event)
 
     @contextmanager
     def stage(self, name: str, model: str) -> Iterator[Stage]:
         stage = Stage(name=name, model=model)
-        self.emit(stage, "start")
+        self.notify({"event": "stage", "name": name, "status": "start"})
         start = time.perf_counter()
         try:
             yield stage
         finally:
             stage.seconds = time.perf_counter() - start
             self.stages.append(stage)
-        self.emit(stage, "done")  # only reached when the call succeeded
+        # Only reached when the call succeeded.
+        self.notify({"event": "stage", "name": name, "status": "done", "seconds": round(stage.seconds, 2)})
 
     @property
     def seconds(self) -> float:

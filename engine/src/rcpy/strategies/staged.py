@@ -80,6 +80,16 @@ Keep everything that is already correct unchanged, including wording.
 {MEASURES}"""
 
 
+def transcript_event(t: Transcript) -> dict:
+    """Progress event for the API stream (camelCase, like the rest of the wire format)."""
+    return {
+        "event": "transcript",
+        "sourceLanguage": t.source_language,
+        "originalTranscript": t.original_transcript,
+        "englishTranscript": t.english_transcript,
+    }
+
+
 def _assemble(transcript: Transcript, body: RecipeBody) -> ParseResult:
     return ParseResult(
         original_transcript=transcript.original_transcript,
@@ -98,6 +108,8 @@ def _transcript_text(t: Transcript) -> str:
 def run_lite(gemini: Gemini, path: Path, mime: str) -> ParseResult:
     with gemini.upload(path, mime) as audio:
         transcript = gemini.generate("transcribe", [TRANSCRIBE, audio], Transcript)
+    # Let the UI show the words while the recipe is still being extracted.
+    gemini.trace.notify(transcript_event(transcript))
     body = gemini.generate("extract", [EXTRACT, _transcript_text(transcript)], RecipeBody)
     return _assemble(transcript, body)
 

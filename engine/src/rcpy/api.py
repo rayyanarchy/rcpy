@@ -22,7 +22,7 @@ from rcpy.formatters import PageInfo, to_crumb, to_html, to_markdown
 from rcpy.ratelimit import RateLimiter
 from rcpy.storage import Store, get_store
 from rcpy.strategies import STAGES, parse_audio
-from rcpy.trace import Stage, Trace
+from rcpy.trace import Trace
 
 log = logging.getLogger("rcpy")
 
@@ -133,15 +133,9 @@ def create_app(settings: Settings | None = None, store: Store | None = None) -> 
     def _process_events(path: Path) -> Iterator[str]:
         events: queue.Queue[dict | None] = queue.Queue()
 
-        def on_event(stage: Stage, status: str) -> None:
-            event = {"event": "stage", "name": stage.name, "status": status}
-            if status == "done":
-                event["seconds"] = round(stage.seconds, 2)
-            events.put(event)
-
         def work() -> None:
             try:
-                result = parse_audio(path, settings, trace=Trace(on_event=on_event))
+                result = parse_audio(path, settings, trace=Trace(listener=events.put))
                 draft = RecipeDraft.from_result(result).model_dump(mode="json", by_alias=True)
                 events.put({"event": "draft", "draft": draft})
             except RcpyError as exc:

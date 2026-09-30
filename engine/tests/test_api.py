@@ -147,6 +147,9 @@ def test_process_stream_reports_each_stage_then_the_draft(data_dir):
         ("extract", "start"), ("extract", "done"),
         ("verify", "start"), ("verify", "done"),
     ]  # fmt: skip
+    transcript = next(e for e in events if e["event"] == "transcript")
+    assert events.index(transcript) == 3  # right after transcribe finishes, before extract starts
+    assert transcript["englishTranscript"].startswith("Heat two tablespoons")
     assert events[-1]["event"] == "draft"
     assert events[-1]["draft"]["name"] == "Aloo Gobi"
     assert "sourceLanguage" in events[-1]["draft"]  # camelCase on the wire, like the plain response
