@@ -16,6 +16,7 @@ class Settings(BaseSettings):
 
     # API / storage
     data_dir: str = "./data"
+    evals_dir: str = "./evals"  # committed eval summaries and pricing.json
     database_url: str = ""  # Postgres (e.g. Neon). Empty = store recipes as JSON files.
     public_base_url: str = ""  # used to build share links; falls back to the request's host
 

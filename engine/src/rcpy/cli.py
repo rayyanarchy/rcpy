@@ -9,11 +9,13 @@ from rich.console import Console
 from rcpy import __version__
 from rcpy.config import get_settings
 from rcpy.errors import RcpyError
+from rcpy.evals.cli import app as eval_app
 from rcpy.formatters import FORMATS, render
 from rcpy.share import share_recipe
 from rcpy.strategies import parse_audio
 
 app = typer.Typer(help="Turn dictated recipe audio into structured recipes.", no_args_is_help=True)
+app.add_typer(eval_app, name="eval")
 err = Console(stderr=True)  # progress and errors go to stderr so stdout stays pipe-friendly
 
 

@@ -1,0 +1,4 @@
+{
+  "_comment": "USD per 1M tokens, per model. Fill in from https://ai.google.dev/gemini-api/docs/pricing; a model missing here shows cost as '-'. 'audio_input' is optional and defaults to 'input'.",
+  "_example-model": {"input": 0.10, "audio_input": 0.30, "output": 0.40}
+}

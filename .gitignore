@@ -64,3 +64,4 @@ __pycache__/
 /engine/data/recipes/
 !/engine/data/raw/.gitkeep
 !/engine/data/out/.gitkeep
+/engine/data/evals/
