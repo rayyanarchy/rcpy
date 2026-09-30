@@ -55,8 +55,11 @@ Run these from `engine/`.
 uv run rcpy parse data/raw/recipe.m4a              # prints JSON
 uv run rcpy parse data/raw/a.mp3 data/raw/b.wav -f json,md,html -o data/out/
 uv run rcpy parse data/raw/recipe.m4a --share      # prints a link that expires in 1 hour
+uv run rcpy parse data/raw/recipe.m4a -s staged    # pick a parse strategy: single, staged, staged-lite
 uv run rcpy serve                                  # the web API on http://127.0.0.1:3000
 ```
+
+`rcpy eval` measures how accurately each strategy works on a set of hand-checked recordings. See [engine/evals/README.md](engine/evals/README.md).
 
 Set `DEMO_MODE=true` to try everything without an API key.
 
@@ -82,9 +85,11 @@ Set these in your `.env` file (in the repo root or `engine/`).
 | --- | --- | --- |
 | `GEMINI_API_KEY` | none | Your Google Gemini API key. Required unless `DEMO_MODE` is on. |
 | `GEMINI_MODEL` | `gemini-3.5-flash-lite` | Gemini model used to process the audio. |
+| `STRATEGY` | `single` | Parse strategy used by the CLI and API: `single`, `staged`, or `staged-lite`. |
 | `DEMO_MODE` | `false` | Set to `true` to use a built-in demo recipe instead of calling Gemini. |
 | `MAX_AUDIO_MB` | `50` | Maximum audio file size in MB. |
-| `DATA_DIR` | `./data` | Where the API stores shared recipes as JSON files when `DATABASE_URL` is not set. |
+| `DATA_DIR` | `./data` | Where the API stores shared recipes as JSON files when `DATABASE_URL` is not set, and where eval cases live. |
+| `EVALS_DIR` | `./evals` | Where eval summaries and `pricing.json` live. |
 | `DATABASE_URL` | none | Postgres connection string (for example Neon). Leave empty to use files in `DATA_DIR`. |
 | `PUBLIC_BASE_URL` | none | Public URL of the API, used to build share links. Defaults to the request's own host. |
 | `SHARE_URL` | `https://rcpy.vercel.app` | Server that `rcpy parse --share` publishes to. |
