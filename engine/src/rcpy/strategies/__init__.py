@@ -11,7 +11,7 @@ from pathlib import Path
 from rcpy.config import Settings
 from rcpy.errors import RcpyError
 from rcpy.schema import ParseResult
-from rcpy.strategies import single
+from rcpy.strategies import single, staged
 from rcpy.strategies._gemini import Gemini
 from rcpy.strategies.demo import DEMO
 from rcpy.trace import Trace
@@ -20,6 +20,8 @@ Strategy = Callable[[Gemini, Path, str], ParseResult]
 
 STRATEGIES: dict[str, Strategy] = {
     "single": single.run,
+    "staged": staged.run,
+    "staged-lite": staged.run_lite,
 }
 
 # Gemini rejects some types, so map by extension ourselves instead of guessing.
