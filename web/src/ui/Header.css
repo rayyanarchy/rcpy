@@ -1,0 +1,33 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 28px;
+  padding-bottom: 28px;
+}
+
+.header__logo img {
+  width: 34px;
+  height: auto;
+}
+
+.header__actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.header__nav {
+  display: flex;
+  gap: 28px;
+  font-size: 14px;
+}
+
+.header__nav a {
+  color: var(--ink-2);
+}
+
+.header__nav a:hover,
+.header__nav a[aria-current="page"] {
+  color: var(--ink);
+}
