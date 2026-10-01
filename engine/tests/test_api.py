@@ -171,3 +171,13 @@ def test_serves_the_web_app_and_its_client_routes(data_dir, tmp_path):
     assert client.get("/").text == "<div id=root></div>"
     assert client.get("/how-it-works").text == "<div id=root></div>"
     assert client.get("/health").json() == {"ok": True}  # API routes still win
+
+
+def test_public_page_counts_down_and_missing_page_explains_expiry(client):
+    slug = publish(client)["recipe"]["slug"]
+    page = client.get(f"/r/{slug}").text
+    assert "data-expires=" in page
+    assert "Open in Crouton" in page
+    missing = client.get("/r/abcdefgh12")
+    assert missing.status_code == 404
+    assert "deleted an hour after" in missing.text

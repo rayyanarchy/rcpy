@@ -18,7 +18,7 @@ from fastapi.staticfiles import StaticFiles
 from rcpy.config import Settings, get_settings
 from rcpy.draft import DraftResponse, PublishResponse, RecipeDraft, RecipeResponse
 from rcpy.errors import RcpyError
-from rcpy.formatters import PageInfo, to_crumb, to_html, to_markdown
+from rcpy.formatters import PageInfo, not_found_html, to_crumb, to_html, to_markdown
 from rcpy.ratelimit import RateLimiter
 from rcpy.storage import Store, get_store
 from rcpy.strategies import STAGES, parse_audio
@@ -193,8 +193,10 @@ def create_app(settings: Settings | None = None, store: Store | None = None, web
     def recipe_page(slug: str, request: Request):
         recipe = store.get(slug)
         if recipe is None:
-            return HTMLResponse("<h1>Recipe not found</h1>", status_code=404)
-        page = PageInfo(_base_url(request, settings), recipe.slug, recipe.created_at, recipe.updated_at)
+            return HTMLResponse(not_found_html(), status_code=404)
+        page = PageInfo(
+            _base_url(request, settings), recipe.slug, recipe.created_at, recipe.updated_at, recipe.expires_at
+        )
         return HTMLResponse(to_html(recipe.to_result(), page))
 
     # Serve the built React app if it exists (`npm run build` in web/). Mounted
