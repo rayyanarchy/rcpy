@@ -12,7 +12,7 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import HTMLResponse, JSONResponse, Response, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from rcpy.config import Settings, get_settings
@@ -28,6 +28,7 @@ log = logging.getLogger("rcpy")
 
 ALLOWED_EXTENSIONS = {".flac", ".mp3", ".mp4", ".mpeg", ".mpga", ".m4a", ".ogg", ".wav", ".webm"}
 DEFAULT_WEB_DIST = Path(__file__).resolve().parents[3] / "web" / "dist"
+SPA_PAGES = ("/how-it-works",)  # client-side routes in web/src/App.tsx
 
 
 def _error(status: int, message: str, **extra) -> JSONResponse:
@@ -66,7 +67,7 @@ def _save_upload(upload: UploadFile, settings: Settings) -> Path:
     return Path(tmp.name)
 
 
-def create_app(settings: Settings | None = None, store: Store | None = None) -> FastAPI:
+def create_app(settings: Settings | None = None, store: Store | None = None, web_dist: Path | None = None) -> FastAPI:
     settings = settings or get_settings()
     store = store or get_store(settings)
     app = FastAPI(title="RCPY", description="Dictated recipes to structured recipes.")
@@ -198,8 +199,11 @@ def create_app(settings: Settings | None = None, store: Store | None = None) -> 
 
     # Serve the built React app if it exists (`npm run build` in web/). Mounted
     # last so every route above wins.
-    dist = Path(DEFAULT_WEB_DIST)
+    dist = Path(web_dist or DEFAULT_WEB_DIST)
     if (dist / "index.html").is_file():
+        # Pages the SPA routes on the client need index.html on a direct load or refresh.
+        for page in SPA_PAGES:
+            app.add_api_route(page, lambda: FileResponse(dist / "index.html"), include_in_schema=False)
         app.mount("/", StaticFiles(directory=dist, html=True), name="web")
 
     return app

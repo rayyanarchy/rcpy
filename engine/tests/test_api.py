@@ -160,3 +160,14 @@ def test_process_stream_ends_with_error_event(data_dir):
     events = _stream(TestClient(create_app(settings)))
     assert events[-1]["event"] == "error"
     assert "unknown strategy" in events[-1]["error"]
+
+
+def test_serves_the_web_app_and_its_client_routes(data_dir, tmp_path):
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (dist / "index.html").write_text("<div id=root></div>")
+    settings = Settings(demo_mode=True, data_dir=str(data_dir), _env_file=None)
+    client = TestClient(create_app(settings, web_dist=dist))
+    assert client.get("/").text == "<div id=root></div>"
+    assert client.get("/how-it-works").text == "<div id=root></div>"
+    assert client.get("/health").json() == {"ok": True}  # API routes still win
