@@ -7,10 +7,9 @@ export default defineConfig({
     port: 5173,
     // The results page bundles engine/evals/results/*.json from outside web/.
     fs: { allow: [".."] },
-    proxy: {
-      "/api": "http://localhost:3000",
-      "/r": "http://localhost:3000",
-      "/health": "http://localhost:3000",
-    },
+    // Keep the browser's Host header so share links point at the dev server, not :3000.
+    proxy: Object.fromEntries(
+      ["/api", "/r/", "/health"].map((path) => [path, { target: "http://localhost:3000", changeOrigin: false }]),
+    ),
   },
 });
