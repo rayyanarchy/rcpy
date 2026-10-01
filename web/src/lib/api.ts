@@ -1,6 +1,17 @@
 import type { ProcessEvent, PublishResponse, RecipeDraft } from "./types";
 
 const FALLBACK = "Something went wrong. Please try again.";
+const UNREACHABLE = import.meta.env.DEV
+  ? "Can't reach the RCPY engine. Start it in engine/ with: uv run rcpy serve"
+  : "RCPY's server isn't responding. Please try again in a moment.";
+
+/** A message for a failed response, from the engine's {"error": "..."} body when there is one. */
+function failure(status: number, body: unknown): string {
+  if (typeof body === "object" && body && "error" in body) return String((body as { error: unknown }).error);
+  if (status === 413) return "That recording is too large. Try a shorter one.";
+  if (status === 502 || status === 503 || status === 504) return UNREACHABLE; // proxy up, engine down
+  return FALLBACK;
+}
 
 export class ApiError extends Error {}
 
@@ -13,16 +24,7 @@ async function request<T>(url: string, init: RequestInit = {}): Promise<T> {
   }
   const isJson = (response.headers.get("content-type") ?? "").includes("application/json");
   const body: unknown = isJson ? await response.json() : await response.text();
-  if (!response.ok) {
-    // The engine always answers errors with {"error": "..."}.
-    const message =
-      typeof body === "object" && body && "error" in body
-        ? String((body as { error: unknown }).error)
-        : response.status === 413
-          ? "That recording is too large. Try a shorter one."
-          : FALLBACK;
-    throw new ApiError(message);
-  }
+  if (!response.ok) throw new ApiError(failure(response.status, body));
   return body as T;
 }
 
@@ -46,8 +48,8 @@ export async function processAudio(
   }
   if (!response.ok || !response.body) {
     // Validation errors (bad type, too large, rate limit) arrive before streaming starts.
-    const data = await response.json().catch(() => null);
-    throw new ApiError(data?.error ?? FALLBACK);
+    const data: unknown = await response.json().catch(() => null);
+    throw new ApiError(failure(response.status, data));
   }
 
   const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
