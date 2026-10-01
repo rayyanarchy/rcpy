@@ -1,7 +1,12 @@
 import type { RecipeDraft } from "./types";
 
 export function fileSlug(name: string): string {
-  return name.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || "recipe";
+  return (
+    name
+      .replace(/[^a-z0-9]+/gi, "-")
+      .replace(/^-|-$/g, "")
+      .toLowerCase() || "recipe"
+  );
 }
 
 export function toMarkdown(recipe: RecipeDraft, link?: string): string {

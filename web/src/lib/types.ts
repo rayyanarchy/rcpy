@@ -1,16 +1,7 @@
 // Wire types for the engine API (engine/src/rcpy/draft.py, camelCase on the wire).
 
 export type Unit =
-  | "ITEM"
-  | "CUP"
-  | "TABLESPOON"
-  | "TEASPOON"
-  | "OUNCE"
-  | "POUND"
-  | "GRAM"
-  | "KILOGRAM"
-  | "MILLILITER"
-  | "LITER";
+  "ITEM" | "CUP" | "TABLESPOON" | "TEASPOON" | "OUNCE" | "POUND" | "GRAM" | "KILOGRAM" | "MILLILITER" | "LITER";
 
 export interface Ingredient {
   id: string;

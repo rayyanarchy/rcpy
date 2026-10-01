@@ -14,17 +14,48 @@ const PIPELINE = [
 type Row = { name: string; help: string; value: (m: Metrics, s: Summary) => string; key?: keyof Metrics };
 
 const ROWS: Row[] = [
-  { name: "Ingredient F1", help: "Found the right ingredients, without inventing any", key: "ingredient_f1", value: (m) => pct(m.ingredient_f1) },
-  { name: "Quantity accuracy", help: "Right amount and unit, after conversion", key: "quantity_accuracy", value: (m) => pct(m.quantity_accuracy) },
-  { name: "Ingredient exact", help: "Found and right quantity, end to end", key: "ingredient_exact", value: (m) => pct(m.ingredient_exact) },
-  { name: "Step coverage", help: "How much of what was said made it into the steps", key: "step_recall", value: (m) => pct(m.step_recall) },
-  { name: "Invented servings or times", help: "Values that were never spoken", value: (m) => String(m.metadata_invented) },
-  { name: "Errors flagged for review", help: "Wrong rows the app highlighted", key: "uncertain_recall", value: (m) => pct(m.uncertain_recall) },
+  {
+    name: "Ingredient F1",
+    help: "Found the right ingredients, without inventing any",
+    key: "ingredient_f1",
+    value: (m) => pct(m.ingredient_f1),
+  },
+  {
+    name: "Quantity accuracy",
+    help: "Right amount and unit, after conversion",
+    key: "quantity_accuracy",
+    value: (m) => pct(m.quantity_accuracy),
+  },
+  {
+    name: "Ingredient exact",
+    help: "Found and right quantity, end to end",
+    key: "ingredient_exact",
+    value: (m) => pct(m.ingredient_exact),
+  },
+  {
+    name: "Step coverage",
+    help: "How much of what was said made it into the steps",
+    key: "step_recall",
+    value: (m) => pct(m.step_recall),
+  },
+  {
+    name: "Invented servings or times",
+    help: "Values that were never spoken",
+    value: (m) => String(m.metadata_invented),
+  },
+  {
+    name: "Errors flagged for review",
+    help: "Wrong rows the app highlighted",
+    key: "uncertain_recall",
+    value: (m) => pct(m.uncertain_recall),
+  },
   {
     name: "Latency · model calls",
     help: "Per recipe, all stages together",
     value: (_, s) =>
-      s.performance.seconds_mean == null ? "—" : `${s.performance.seconds_mean.toFixed(1)}s · ${s.performance.calls_per_recipe ?? "—"}`,
+      s.performance.seconds_mean == null
+        ? "—"
+        : `${s.performance.seconds_mean.toFixed(1)}s · ${s.performance.calls_per_recipe ?? "—"}`,
   },
 ];
 
@@ -53,9 +84,9 @@ export function HowItWorks() {
             Three small jobs instead of one big guess
           </h1>
           <p className="how__lede">
-            Family recipes are spoken in a mix of languages, with amounts like "thoda sa" and corrections halfway through
-            a sentence. RCPY splits the work into stages, checks its own output against what was said, and is measured on
-            real recordings.
+            Family recipes are spoken in a mix of languages, with amounts like "thoda sa" and corrections halfway
+            through a sentence. RCPY splits the work into stages, checks its own output against what was said, and is
+            measured on real recordings.
           </p>
         </section>
 
@@ -74,8 +105,8 @@ export function HowItWorks() {
             <h2 id="results">Results</h2>
             {headline && (
               <span className="mono how__meta">
-                {headline.cases.length} hand-checked recordings · {headline.repeats} run{headline.repeats > 1 ? "s" : ""}{" "}
-                each · {headline.model}
+                {headline.cases.length} hand-checked recordings · {headline.repeats} run
+                {headline.repeats > 1 ? "s" : ""} each · {headline.model}
               </span>
             )}
           </div>

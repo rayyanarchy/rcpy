@@ -116,5 +116,11 @@ function Flow() {
         }}
       />
     );
-  return <Home onRecord={() => void recorder.start()} onFile={(file) => void process(file)} error={error || recorder.error} />;
+  return (
+    <Home
+      onRecord={() => void recorder.start()}
+      onFile={(file) => void process(file)}
+      error={error || recorder.error}
+    />
+  );
 }

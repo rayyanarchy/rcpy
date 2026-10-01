@@ -99,7 +99,11 @@ export function Review({ draft, onChange, onStartOver }: Props) {
                       value={item.quantity}
                       placeholder="amount"
                       onChange={(e) =>
-                        setIngredient(item.id, { quantity: e.target.value, ...parseQuantity(e.target.value), uncertain: false })
+                        setIngredient(item.id, {
+                          quantity: e.target.value,
+                          ...parseQuantity(e.target.value),
+                          uncertain: false,
+                        })
                       }
                     />
                     <AutoTextarea
@@ -114,7 +118,12 @@ export function Review({ draft, onChange, onStartOver }: Props) {
                     <RowEnd
                       uncertain={item.uncertain}
                       onConfirm={() => setIngredient(item.id, { uncertain: false })}
-                      onRemove={() => set("ingredients", draft.ingredients.filter((i) => i.id !== item.id))}
+                      onRemove={() =>
+                        set(
+                          "ingredients",
+                          draft.ingredients.filter((i) => i.id !== item.id),
+                        )
+                      }
                       what={item.name || "ingredient"}
                       canRemove={draft.ingredients.length > 1}
                     />
@@ -153,7 +162,12 @@ export function Review({ draft, onChange, onStartOver }: Props) {
                     <RowEnd
                       uncertain={step.uncertain}
                       onConfirm={() => setStep(step.id, { uncertain: false })}
-                      onRemove={() => set("steps", draft.steps.filter((s) => s.id !== step.id))}
+                      onRemove={() =>
+                        set(
+                          "steps",
+                          draft.steps.filter((s) => s.id !== step.id),
+                        )
+                      }
                       what={`step ${n + 1}`}
                       canRemove={draft.steps.length > 1}
                     />

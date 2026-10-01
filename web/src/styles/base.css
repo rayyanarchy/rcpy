@@ -144,7 +144,9 @@ svg {
   border-radius: var(--radius);
   background: var(--surface);
   font-size: 15px;
-  transition: border-color 120ms, background 120ms;
+  transition:
+    border-color 120ms,
+    background 120ms;
 }
 
 .button:hover:not(:disabled) {

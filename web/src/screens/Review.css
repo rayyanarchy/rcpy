@@ -395,7 +395,9 @@
     padding: 12px var(--gutter) calc(12px + env(safe-area-inset-bottom));
     border-top: 1px solid var(--line);
     background: var(--bg);
-    transition: transform 200ms ease, opacity 200ms ease;
+    transition:
+      transform 200ms ease,
+      opacity 200ms ease;
   }
 
   .export__bar .button {

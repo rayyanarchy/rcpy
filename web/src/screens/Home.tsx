@@ -57,8 +57,8 @@ export function Home({ onRecord, onFile, error }: Props) {
             </span>
           </h1>
           <p className="home__lede">
-            Talk through a recipe the way you would tell family, in English, Hindi or Urdu, mixed however it comes
-            out. RCPY writes it down as a recipe you can check before it goes anywhere.
+            Talk through a recipe the way you would tell family, in English, Hindi or Urdu, mixed however it comes out.
+            RCPY writes it down as a recipe you can check before it goes anywhere.
           </p>
         </section>
 
@@ -103,9 +103,7 @@ export function Home({ onRecord, onFile, error }: Props) {
             />
             <div>
               <div className="home__option-title">{dragging ? "Drop it here" : "Drop a voice note"}</div>
-              <p className="home__option-help mono home__formats">
-                m4a · mp3 · wav · webm · ogg · flac · up to 50 MB
-              </p>
+              <p className="home__option-help mono home__formats">m4a · mp3 · wav · webm · ogg · flac · up to 50 MB</p>
             </div>
           </div>
         </section>
@@ -152,12 +150,12 @@ export function Home({ onRecord, onFile, error }: Props) {
 
       <footer className="page">
         <div className="home__footer">
-        <span>Audio is deleted after processing. Shared links expire after an hour.</span>
-        <Link to="/how-it-works" className="home__proof">
-          {headline
-            ? `Ingredient F1 ${pct(headline.metrics.ingredient_f1)} on ${headline.cases.length} real recordings →`
-            : "How it works →"}
-        </Link>
+          <span>Audio is deleted after processing. Shared links expire after an hour.</span>
+          <Link to="/how-it-works" className="home__proof">
+            {headline
+              ? `Ingredient F1 ${pct(headline.metrics.ingredient_f1)} on ${headline.cases.length} real recordings →`
+              : "How it works →"}
+          </Link>
         </div>
       </footer>
     </div>

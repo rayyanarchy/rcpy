@@ -28,9 +28,7 @@ export function ExportPanel({ draft }: { draft: RecipeDraft }) {
   const [panelVisible, setPanelVisible] = useState(false);
   useEffect(() => {
     if (!panel.current) return;
-    const observer = new IntersectionObserver(([entry]) =>
-      setPanelVisible(entry.isIntersecting),
-    );
+    const observer = new IntersectionObserver(([entry]) => setPanelVisible(entry.isIntersecting));
     observer.observe(panel.current);
     return () => observer.disconnect();
   }, []);
@@ -70,20 +68,13 @@ export function ExportPanel({ draft }: { draft: RecipeDraft }) {
     return result;
   }
 
-  async function run(
-    kind: Busy,
-    action: (result: PublishResponse) => void | Promise<void>,
-  ) {
+  async function run(kind: Busy, action: (result: PublishResponse) => void | Promise<void>) {
     setError("");
     setBusy(kind);
     try {
       await action(await ensurePublished());
     } catch (caught) {
-      setError(
-        caught instanceof ApiError
-          ? caught.message
-          : "Something went wrong. Please try again.",
-      );
+      setError(caught instanceof ApiError ? caught.message : "Something went wrong. Please try again.");
     } finally {
       setBusy("");
     }
@@ -105,12 +96,7 @@ export function ExportPanel({ draft }: { draft: RecipeDraft }) {
 
   return (
     <>
-      <section
-        ref={panel}
-        className="panel export"
-        id="export"
-        aria-labelledby="export-title"
-      >
+      <section ref={panel} className="panel export" id="export" aria-labelledby="export-title">
         <h2 id="export-title" className="eyebrow">
           Export
         </h2>
@@ -126,28 +112,13 @@ export function ExportPanel({ draft }: { draft: RecipeDraft }) {
 
         {showCrouton && published && (
           <div className="export__qr">
-            {qr && (
-              <img
-                src={qr}
-                alt={`QR code for ${published.url}`}
-                width={140}
-                height={140}
-              />
-            )}
+            {qr && <img src={qr} alt={`QR code for ${published.url}`} width={140} height={140} />}
             <div>
               <p>Scan with your phone to import into Crouton.</p>
-              <a
-                className="export__link"
-                href={published.crumbUrl}
-                download={`${fileSlug(draft.name)}.crumb`}
-              >
+              <a className="export__link" href={published.crumbUrl} download={`${fileSlug(draft.name)}.crumb`}>
                 Or download the .crumb file
               </a>
-              {!upToDate && (
-                <p className="export__stale">
-                  You've edited since. Tap Open in Crouton again to update.
-                </p>
-              )}
+              {!upToDate && <p className="export__stale">You've edited since. Tap Open in Crouton again to update.</p>}
             </div>
           </div>
         )}
@@ -166,25 +137,12 @@ export function ExportPanel({ draft }: { draft: RecipeDraft }) {
           >
             Markdown
           </button>
-          <button
-            type="button"
-            className="button"
-            onClick={() => printRecipe(draft)}
-          >
+          <button type="button" className="button" onClick={() => printRecipe(draft)}>
             PDF
           </button>
         </div>
-        <button
-          type="button"
-          className="button"
-          onClick={copyLink}
-          disabled={!!busy}
-        >
-          {busy === "link"
-            ? "Saving…"
-            : copied
-              ? "Link copied"
-              : "Copy share link"}
+        <button type="button" className="button" onClick={copyLink} disabled={!!busy}>
+          {busy === "link" ? "Saving…" : copied ? "Link copied" : "Copy share link"}
         </button>
         <p className="export__note" aria-live="polite">
           {published
@@ -197,16 +155,8 @@ export function ExportPanel({ draft }: { draft: RecipeDraft }) {
           </p>
         )}
       </section>
-      <div
-        className={`export__bar${panelVisible ? " is-hidden" : ""}`}
-        aria-hidden={panelVisible}
-      >
-        <button
-          type="button"
-          className="button button--primary"
-          onClick={openInCrouton}
-          disabled={!!busy}
-        >
+      <div className={`export__bar${panelVisible ? " is-hidden" : ""}`} aria-hidden={panelVisible}>
+        <button type="button" className="button button--primary" onClick={openInCrouton} disabled={!!busy}>
           <img src="/crouton_icon.png" alt="" width={24} height={24} />
           {busy === "crouton" ? "Saving…" : "Open in Crouton"}
         </button>
