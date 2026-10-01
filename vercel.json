@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "installCommand": "npm ci --prefix web",
-  "buildCommand": "npm run build:vercel --prefix web",
+  "installCommand": "cd web && npm ci",
+  "buildCommand": "cd web && npm run build:vercel",
   "outputDirectory": "web/dist",
   "functions": {
     "api/index.py": {
@@ -11,9 +11,21 @@
     }
   },
   "rewrites": [
-    { "source": "/api/:path*", "destination": "/api/index?__rcpy_path=/api/:path*" },
-    { "source": "/r/:slug", "destination": "/api/index?__rcpy_path=/r/:slug" },
-    { "source": "/health", "destination": "/api/index?__rcpy_path=/health" },
-    { "source": "/how-it-works", "destination": "/index.html" }
+    {
+      "source": "/api/:path*",
+      "destination": "/api/index?__rcpy_path=/api/:path*"
+    },
+    {
+      "source": "/r/:slug",
+      "destination": "/api/index?__rcpy_path=/r/:slug"
+    },
+    {
+      "source": "/health",
+      "destination": "/api/index?__rcpy_path=/health"
+    },
+    {
+      "source": "/how-it-works",
+      "destination": "/index.html"
+    }
   ]
 }
