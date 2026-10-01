@@ -51,7 +51,8 @@ export function useRecorder(onComplete: (file: File) => void): Recorder {
     }
 
     const mimeType = pickMimeType();
-    const media = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+    // 32 kbps is plenty for speech and keeps a 15-minute recording under 4 MB.
+    const media = new MediaRecorder(stream, { audioBitsPerSecond: 32_000, ...(mimeType ? { mimeType } : {}) });
     const chunks: Blob[] = [];
     media.addEventListener("dataavailable", (e) => e.data.size > 0 && chunks.push(e.data));
     media.addEventListener("stop", () => {

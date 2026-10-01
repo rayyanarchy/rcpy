@@ -5,7 +5,9 @@ import { Header, MainNav } from "../ui/Header";
 import { Link } from "../ui/Link";
 import "./Home.css";
 
-const MAX_BYTES = 50 * 1024 * 1024;
+// Hosts cap request bodies (Vercel: 4.5 MB), so deployments can lower this at build time.
+const MAX_MB = Number(import.meta.env.VITE_MAX_AUDIO_MB) || 50;
+const MAX_BYTES = MAX_MB * 1024 * 1024;
 const ACCEPT = ".m4a,.mp3,.mp4,.wav,.webm,.ogg,.opus,.flac,.aac,audio/*";
 
 // A real recording (engine/data/raw/chatpate_aloo.mp3), trimmed.
@@ -30,7 +32,7 @@ export function Home({ onRecord, onFile, error }: Props) {
   const accept = (file: File | undefined) => {
     setLocalError("");
     if (!file) return;
-    if (file.size > MAX_BYTES) return setLocalError("That file is over 50 MB. Try a shorter recording.");
+    if (file.size > MAX_BYTES) return setLocalError(`That file is over ${MAX_MB} MB. Try a shorter recording.`);
     onFile(file);
   };
 
@@ -103,7 +105,9 @@ export function Home({ onRecord, onFile, error }: Props) {
             />
             <div>
               <div className="home__option-title">{dragging ? "Drop it here" : "Drop a voice note"}</div>
-              <p className="home__option-help mono home__formats">m4a · mp3 · wav · webm · ogg · flac · up to 50 MB</p>
+              <p className="home__option-help mono home__formats">
+                m4a · mp3 · wav · webm · ogg · flac · up to {MAX_MB} MB
+              </p>
             </div>
           </div>
         </section>
