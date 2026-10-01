@@ -131,12 +131,12 @@ Audio you upload is sent to Google's Gemini API for processing, and the app dele
 - Storage: JSON files, or Postgres (Neon) via psycopg
 - Frontend: React 19, Vite, Lucide icons
 - Testing: pytest
-- Fonts: DM Sans, Fraunces, Figtree, Instrument Serif
+- Fonts: Geist and Geist Mono
 
 
 ## Credits
 
-RCPY is an independent project and is not affiliated with or endorsed by Crouton. The fonts are used under the SIL Open Font License, and the license texts for the bundled Figtree and Instrument Serif files are in `web/public/fonts`.
+RCPY is an independent project and is not affiliated with or endorsed by Crouton. Geist and Geist Mono are used under the SIL Open Font License.
 
 
 ## License
