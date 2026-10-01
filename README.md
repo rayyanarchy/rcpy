@@ -136,6 +136,20 @@ Audio you upload is sent to Google's Gemini API for processing, and the app dele
 - Fonts: Geist and Geist Mono
 
 
+## Roadmap
+
+- [x] Staged pipeline (transcribe, extract, verify) alongside the original single-call baseline
+- [x] Eval harness with deterministic scoring for ingredients, quantities, steps and invented values
+- [x] Redesigned web app in TypeScript, with live progress, inline review and Crouton export
+- [ ] Record and hand-check 30 to 50 real family recordings for the eval set, a third of them held out
+- [ ] Benchmark single, staged and staged-lite on that set, and make the winner the default strategy
+- [ ] Add Gemini prices to `engine/evals/pricing.json` so the results include cost per recipe
+- [ ] Publish the numbers on the How it works page, with real failure examples
+- [ ] Show where each ingredient came from: the matching words in the transcript, with replay of that moment of the audio
+- [ ] Screenshots and a write-up of the approach and results in this README
+- [ ] Deploy the beta
+
+
 ## Credits
 
 RCPY is an independent project and is not affiliated with or endorsed by Crouton. Geist and Geist Mono are used under the SIL Open Font License.
