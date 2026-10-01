@@ -342,9 +342,27 @@
     padding: 32px 0 28px;
   }
 
+  /* Amount above the name: there is no room for a fixed amount column. */
   .review__ingredient {
-    grid-template-columns: 84px minmax(0, 1fr) auto;
-    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "qty end" "name end";
+    gap: 0 10px;
+    padding: 8px 0;
+  }
+
+  .review__qty {
+    grid-area: qty;
+    padding-top: 2px !important;
+    padding-bottom: 0 !important;
+    font-size: 13px;
+  }
+
+  .review__ingredient-name {
+    grid-area: name;
+  }
+
+  .review__ingredient .review__row-end {
+    grid-area: end;
   }
 
   .review__facts {

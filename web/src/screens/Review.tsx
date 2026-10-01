@@ -102,11 +102,14 @@ export function Review({ draft, onChange, onStartOver }: Props) {
                         setIngredient(item.id, { quantity: e.target.value, ...parseQuantity(e.target.value), uncertain: false })
                       }
                     />
-                    <input
+                    <AutoTextarea
                       aria-label="Ingredient"
+                      className="review__ingredient-name"
                       value={item.name}
                       placeholder="ingredient"
-                      onChange={(e) => setIngredient(item.id, { name: e.target.value, uncertain: false })}
+                      onChange={(e) =>
+                        setIngredient(item.id, { name: e.target.value.replace(/\n/g, " "), uncertain: false })
+                      }
                     />
                     <RowEnd
                       uncertain={item.uncertain}

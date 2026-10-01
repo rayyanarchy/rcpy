@@ -150,13 +150,15 @@ export function Home({ onRecord, onFile, error }: Props) {
         </section>
       </main>
 
-      <footer className="page home__footer">
+      <footer className="page">
+        <div className="home__footer">
         <span>Audio is deleted after processing. Shared links expire after an hour.</span>
         <Link to="/how-it-works" className="home__proof">
           {headline
             ? `Ingredient F1 ${pct(headline.metrics.ingredient_f1)} on ${headline.cases.length} real recordings →`
             : "How it works →"}
         </Link>
+        </div>
       </footer>
     </div>
   );

@@ -230,6 +230,11 @@
     padding-top: 72px;
   }
 
+  .home__footer {
+    margin-top: 32px;
+    padding-top: 32px;
+  }
+
   .home__column,
   .home__column:first-child,
   .home__column:last-child {
