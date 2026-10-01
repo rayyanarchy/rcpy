@@ -97,6 +97,22 @@ Set these in your `.env` file (in the repo root or `engine/`).
 | `SHARE_URL` | `https://rcpy.vercel.app` | Server that `rcpy parse --share` publishes to. |
 
 
+## Deploying to Vercel
+
+The repo deploys as one Vercel project from the root: `vercel.json` builds the web app into `web/dist` and runs the engine as a single Python function (`api/index.py`, with dependencies pinned in `requirements.txt`). Uploads are capped at 4 MB there, because Vercel limits request bodies to 4.5 MB.
+
+Set these in the project's environment variables (for Preview too, if you deploy branches):
+
+| Variable | Needed | Why |
+| --- | --- | --- |
+| `GEMINI_API_KEY` | yes | Processing recordings |
+| `DATABASE_URL` | yes | Share links. Without it, saved recipes live in one function instance's temp folder and links break. |
+| `STRATEGY` | recommended | `staged` shows the three-stage progress |
+| `PUBLIC_BASE_URL` | no | Leave unset so links use each deployment's own domain |
+
+After changing dependencies in `engine/pyproject.toml`, regenerate `requirements.txt` with the command at its top.
+
+
 ## Tests
 
 ```bash

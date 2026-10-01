@@ -1,0 +1,19 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm ci --prefix web",
+  "buildCommand": "VITE_MAX_AUDIO_MB=4 npm run build --prefix web",
+  "outputDirectory": "web/dist",
+  "functions": {
+    "api/index.py": {
+      "maxDuration": 60,
+      "includeFiles": "engine/src/rcpy/**"
+    }
+  },
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/index?__rcpy_path=/api/:path*" },
+    { "source": "/r/:slug", "destination": "/api/index?__rcpy_path=/r/:slug" },
+    { "source": "/health", "destination": "/api/index?__rcpy_path=/health" },
+    { "source": "/how-it-works", "destination": "/index.html" }
+  ]
+}
