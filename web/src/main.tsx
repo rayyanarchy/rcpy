@@ -1,16 +1,12 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import "@fontsource/dm-sans/400.css";
-import "@fontsource/dm-sans/500.css";
-import "@fontsource/dm-sans/600.css";
-import "@fontsource/dm-sans/700.css";
-import "@fontsource/fraunces/400.css";
-import "@fontsource/fraunces/600.css";
-import App from "./App.jsx";
-import "./styles.css";
+import "@fontsource-variable/geist";
+import "@fontsource-variable/geist-mono";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App";
+import "./styles/base.css";
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
     <App />
-  </React.StrictMode>
+  </StrictMode>,
 );
