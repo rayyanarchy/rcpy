@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-RCPY turns dictated recipe audio into structured recipes (JSON / Markdown / HTML / Crouton `.crumb`). Two parts: a Python engine in `engine/` (library + Typer CLI + FastAPI server) and a React/Vite web app in `web/` that talks to that API.
+RCPY turns dictated recipe audio into structured recipes (JSON / Markdown / HTML / Crouton `.crumb`). Two parts: a Python engine in `engine/` (library + Typer CLI + FastAPI server) and a React/TypeScript/Vite web app in `web/` that talks to that API.
 
 ## Commands
 
@@ -36,7 +36,7 @@ CI (`.github/workflows/ci.yml`) runs ruff check, ruff format --check and pytest 
 
 **Evals (`evals/` package + `engine/evals/`):** `rcpy eval add|list|run|rescore|compare`. Cases (audio + hand-checked `gold.json`, a `GoldCase`) live in git-ignored `<DATA_DIR>/evals/cases/`; raw predictions are cached in `<DATA_DIR>/evals/runs/<run_id>/` so `rescore` needs no model calls; summaries go to the committed `engine/evals/results/<run_id>.json` (`EVALS_DIR`). Scoring (`match.py`, `metrics.py`) is deterministic: fuzzy ingredient alignment with a Hindi/Urdu synonym table, unit-equivalent quantity comparison, lexical step coverage. `engine/evals/README.md` is the recording/annotation guide — keep it in sync with the metric semantics.
 
-**API (`api.py`):** built via the `create_app(settings, store)` factory (tests inject `Settings(..., _env_file=None)`). Every error response is `{"error": "..."}` because `web/src/lib/api.js` reads that field — raise `RcpyError(message, status=...)` from engine code and the handler maps it. Blocking routes (Gemini call) are plain `def` so FastAPI runs them in a threadpool. If `web/dist/index.html` exists, the built SPA is mounted at `/` after all API routes. Per-IP in-memory rate limits (`ratelimit.py`) guard process and write routes.
+**API (`api.py`):** built via the `create_app(settings, store)` factory (tests inject `Settings(..., _env_file=None)`). Every error response is `{"error": "..."}` because `web/src/lib/api.ts` reads that field — raise `RcpyError(message, status=...)` from engine code and the handler maps it. Blocking routes (Gemini call) are plain `def` so FastAPI runs them in a threadpool. If `web/dist/index.html` exists, the built SPA is mounted at `/` after all API routes, and each client-side route in `SPA_PAGES` (e.g. `/how-it-works`) serves its `index.html`. `/r/{slug}` is server-rendered by `formatters.to_html` (styled to match the web app). Per-IP in-memory rate limits (`ratelimit.py`) guard process and write routes.
 
 **Storage (`storage.py`):** abstract `Store` implements save/get/update and expiry (1-hour TTL; edits do not extend it; expired rows are deleted lazily on read); subclasses only implement `_read`/`_write`/`_delete`. `PostgresStore` when `DATABASE_URL` is set (table `rcpy_recipes`, kept compatible with the old Node app's schema), otherwise `FileStore` writing JSON to `<DATA_DIR>/recipes/`. Slugs are validated against `SLUG_RE` before any lookup.
 
@@ -45,6 +45,8 @@ CI (`.github/workflows/ci.yml`) runs ruff check, ruff format --check and pytest 
 **Config:** `config.Settings` (pydantic-settings) reads env vars or `.env` from the cwd or its parent, so the repo-root `.env` works when running from `engine/`. See the README's Configuration table for variables.
 
 **Data folder:** `engine/data/` (`raw/` recordings, `out/` outputs, `recipes/` FileStore, `evals/` eval cases and cached runs) is git-ignored apart from `.gitkeep`s; `DATA_DIR` defaults to `./data`, so paths are relative to where commands run (normally `engine/`).
+
+**Web (`web/src`):** `App.tsx` is the whole flow as a small state machine — home → recording (`hooks/useRecorder.ts`) → processing (reads the NDJSON stream via `lib/api.ts processAudio`) → review — plus `/how-it-works`, routed by the tiny History-API router in `lib/router.ts` (add new client routes to `SPA_PAGES` in `api.py` too). Screens live in `screens/` with a CSS file each; shared tokens and button styles are in `styles/base.css` (imported first in `main.tsx` so screen CSS can override). Wire types are in `lib/types.ts` and must match `draft.py`. `lib/results.ts` bundles `engine/evals/results/*.json` at build time for the results page. `lib/quantity.ts` parses a typed quantity into Crouton's amount/unit. Look: near-monochrome, Geist + Geist Mono, RCPY red only for recording, amber only for "check this".
 
 ## Conventions
 

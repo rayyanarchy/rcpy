@@ -5,11 +5,14 @@ Turn voice notes and dictations into recipes for Crouton, Markdown, and PDF.
 
 ## Features
 
-- AI recipe extraction: Gemini turns your recording into a structured recipe, validated against a schema so the output is always consistent
-- Record in the browser with a live waveform, or upload an existing audio file (MP3, M4A, WAV, MP4, OGG, FLAC, or WebM)
-- Review and edit the recipe before you save it
-- Export to Crouton, Markdown, or PDF
-- Share each saved recipe with a public link and a QR code that stay valid for one hour
+- Speak naturally: English, Hindi or Urdu, mixed however it comes out, with amounts like "adha kilo" or "thoda sa" and corrections halfway through
+- A staged AI pipeline (transcribe, extract, verify) on Gemini, with every output validated against a schema
+- Measured, not guessed: an eval harness scores each pipeline on hand-checked real recordings (see [engine/evals](engine/evals/README.md)), and the app's How it works page shows the numbers
+- Record in the browser with a live waveform, or drop a voice note (M4A, MP3, WAV, WebM, OGG, FLAC)
+- Watch it work: each stage and the transcript appear as soon as they're ready
+- Review before anything leaves: edit every field in place; rows the model wasn't sure about are marked for you to check
+- Export to Crouton (opens the .crumb on a phone, or a QR code on a computer), Markdown, or PDF
+- Share a public link that expires after an hour
 - Demo mode for trying the whole flow without an API key
 
 
@@ -70,11 +73,10 @@ To run the web app in development, start `uv run rcpy serve` in `engine/` and `n
 
 ## How To Use (web app)
 
-1. Record a recipe by reading it aloud, or upload an audio file.
-2. Wait a moment while the AI turns it into a structured recipe.
-3. Review the result and edit anything that needs fixing.
-4. Save the recipe to get a shareable link and QR code. They stay valid for one hour, so import or export the recipe before then.
-5. Export the recipe to Crouton, Markdown, or PDF.
+1. Tap Record and talk through the recipe, or drop in a voice note.
+2. Watch RCPY transcribe it, pull out the ingredients and steps, and check them against what you said.
+3. Fix anything marked "check", or anything else, right in place.
+4. Open it in Crouton, download Markdown or a PDF, or copy a share link. Share links stop working after an hour.
 
 
 ## Configuration
@@ -129,8 +131,8 @@ Audio you upload is sent to Google's Gemini API for processing, and the app dele
 - CLI: Typer, Rich
 - API: FastAPI, Uvicorn
 - Storage: JSON files, or Postgres (Neon) via psycopg
-- Frontend: React 19, Vite, Lucide icons
-- Testing: pytest
+- Frontend: React 19, TypeScript, Vite, Lucide icons
+- Testing: pytest (engine), Vitest (web); ruff and prettier in CI
 - Fonts: Geist and Geist Mono
 
 
