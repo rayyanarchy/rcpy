@@ -9,7 +9,10 @@ type Busy = "" | "crouton" | "link";
 const isTouch = () => window.matchMedia("(pointer: coarse)").matches;
 
 function expiryTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  return new Date(iso).toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 export function ExportPanel({ draft }: { draft: RecipeDraft }) {
@@ -20,6 +23,17 @@ export function ExportPanel({ draft }: { draft: RecipeDraft }) {
   const [copied, setCopied] = useState(false);
   const [qr, setQr] = useState("");
   const [showCrouton, setShowCrouton] = useState(false);
+  // Phones get a sticky Open in Crouton bar until the full panel scrolls into view.
+  const panel = useRef<HTMLElement>(null);
+  const [panelVisible, setPanelVisible] = useState(false);
+  useEffect(() => {
+    if (!panel.current) return;
+    const observer = new IntersectionObserver(([entry]) =>
+      setPanelVisible(entry.isIntersecting),
+    );
+    observer.observe(panel.current);
+    return () => observer.disconnect();
+  }, []);
 
   const current = JSON.stringify(draft);
   const upToDate = published !== null && snapshot.current === current;
@@ -28,7 +42,11 @@ export function ExportPanel({ draft }: { draft: RecipeDraft }) {
   useEffect(() => {
     if (!published) return;
     let live = true;
-    QRCode.toDataURL(published.url, { margin: 1, width: 360, color: { dark: "#121212", light: "#ffffff" } })
+    QRCode.toDataURL(published.url, {
+      margin: 1,
+      width: 360,
+      color: { dark: "#121212", light: "#ffffff" },
+    })
       .then((url) => live && setQr(url))
       .catch(() => live && setQr(""));
     return () => {
@@ -52,13 +70,20 @@ export function ExportPanel({ draft }: { draft: RecipeDraft }) {
     return result;
   }
 
-  async function run(kind: Busy, action: (result: PublishResponse) => void | Promise<void>) {
+  async function run(
+    kind: Busy,
+    action: (result: PublishResponse) => void | Promise<void>,
+  ) {
     setError("");
     setBusy(kind);
     try {
       await action(await ensurePublished());
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : "Something went wrong. Please try again.");
+      setError(
+        caught instanceof ApiError
+          ? caught.message
+          : "Something went wrong. Please try again.",
+      );
     } finally {
       setBusy("");
     }
@@ -79,55 +104,116 @@ export function ExportPanel({ draft }: { draft: RecipeDraft }) {
     });
 
   return (
-    <section className="panel export" id="export" aria-labelledby="export-title">
-      <h2 id="export-title" className="eyebrow">
-        Export
-      </h2>
-      <button type="button" className="button button--primary export__crouton" onClick={openInCrouton} disabled={!!busy}>
-        <img src="/crouton_icon.png" alt="" width={22} height={22} />
-        {busy === "crouton" ? "Saving…" : "Open in Crouton"}
-      </button>
+    <>
+      <section
+        ref={panel}
+        className="panel export"
+        id="export"
+        aria-labelledby="export-title"
+      >
+        <h2 id="export-title" className="eyebrow">
+          Export
+        </h2>
+        <button
+          type="button"
+          className="button button--primary export__crouton"
+          onClick={openInCrouton}
+          disabled={!!busy}
+        >
+          <img src="/crouton_icon.png" alt="" width={22} height={22} />
+          {busy === "crouton" ? "Saving…" : "Open in Crouton"}
+        </button>
 
-      {showCrouton && published && (
-        <div className="export__qr">
-          {qr && <img src={qr} alt={`QR code for ${published.url}`} width={140} height={140} />}
-          <div>
-            <p>Scan with your phone to import into Crouton.</p>
-            <a className="export__link" href={published.crumbUrl} download={`${fileSlug(draft.name)}.crumb`}>
-              Or download the .crumb file
-            </a>
-            {!upToDate && <p className="export__stale">You've edited since. Tap Open in Crouton again to update.</p>}
+        {showCrouton && published && (
+          <div className="export__qr">
+            {qr && (
+              <img
+                src={qr}
+                alt={`QR code for ${published.url}`}
+                width={140}
+                height={140}
+              />
+            )}
+            <div>
+              <p>Scan with your phone to import into Crouton.</p>
+              <a
+                className="export__link"
+                href={published.crumbUrl}
+                download={`${fileSlug(draft.name)}.crumb`}
+              >
+                Or download the .crumb file
+              </a>
+              {!upToDate && (
+                <p className="export__stale">
+                  You've edited since. Tap Open in Crouton again to update.
+                </p>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <div className="export__row">
+        <div className="export__row">
+          <button
+            type="button"
+            className="button"
+            onClick={() =>
+              download(
+                toMarkdown(draft, upToDate ? published?.url : undefined),
+                `${fileSlug(draft.name)}.md`,
+                "text/markdown",
+              )
+            }
+          >
+            Markdown
+          </button>
+          <button
+            type="button"
+            className="button"
+            onClick={() => printRecipe(draft)}
+          >
+            PDF
+          </button>
+        </div>
         <button
           type="button"
           className="button"
-          onClick={() =>
-            download(toMarkdown(draft, upToDate ? published?.url : undefined), `${fileSlug(draft.name)}.md`, "text/markdown")
-          }
+          onClick={copyLink}
+          disabled={!!busy}
         >
-          Markdown
+          {busy === "link"
+            ? "Saving…"
+            : copied
+              ? "Link copied"
+              : "Copy share link"}
         </button>
-        <button type="button" className="button" onClick={() => printRecipe(draft)}>
-          PDF
-        </button>
-      </div>
-      <button type="button" className="button" onClick={copyLink} disabled={!!busy}>
-        {busy === "link" ? "Saving…" : copied ? "Link copied" : "Copy share link"}
-      </button>
-      <p className="export__note" aria-live="polite">
-        {published
-          ? `Your link works until ${expiryTime(published.recipe.expiresAt)}, then the recipe is deleted.`
-          : "Share links work for one hour, then the recipe is deleted."}
-      </p>
-      {error && (
-        <p className="error" role="alert">
-          {error}
+        <p className="export__note" aria-live="polite">
+          {published
+            ? `Your link works until ${expiryTime(published.recipe.expiresAt)}, then the recipe is deleted.`
+            : "Share links work for one hour, then the recipe is deleted."}
         </p>
-      )}
-    </section>
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
+      </section>
+      <div
+        className={`export__bar${panelVisible ? " is-hidden" : ""}`}
+        aria-hidden={panelVisible}
+      >
+        <button
+          type="button"
+          className="button button--primary"
+          onClick={openInCrouton}
+          disabled={!!busy}
+        >
+          <img src="/crouton_icon.png" alt="" width={24} height={24} />
+          {busy === "crouton" ? "Saving…" : "Open in Crouton"}
+        </button>
+        <a href="#export" className="button" aria-label="More export options">
+          More
+        </a>
+      </div>
+    </>
   );
 }

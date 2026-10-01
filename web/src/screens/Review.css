@@ -373,3 +373,38 @@
     width: 96px;
   }
 }
+
+.export__bar {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .review {
+    padding-bottom: 96px;
+  }
+
+  .export__bar {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 10;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 12px var(--gutter) calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+    transition: transform 200ms ease, opacity 200ms ease;
+  }
+
+  .export__bar .button {
+    min-height: 52px;
+  }
+
+  .export__bar.is-hidden {
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+}
