@@ -32,6 +32,7 @@ class GoldCase(BaseModel):
     speaker: str = ""
     tags: list[str] = Field(default=[], description="Free-form labels to slice results by, e.g. 'ranges'.")
     notes: str = ""
+    script: str = Field(default="", description="Id of the dictation script this was read from, if any.")
     recipe: GoldRecipe
 
     @classmethod

@@ -146,3 +146,17 @@ def test_plain_water_is_not_scored(result):
     assert "water for soaking" not in score_case("x", gold, pred).extra
     tamarind = GoldIngredient(name="tamarind water", amount=None)
     assert score_case("x", _gold().model_copy(update={"ingredients": [tamarind]}), None).gold_ingredients == 1
+
+
+def test_recordings_named_after_scripts_take_their_answer_key(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path / "data"))
+    audio = tmp_path / "khatti-dal--mom.m4a"
+    audio.write_bytes(b"x")
+    res = runner.invoke(app, ["eval", "add", str(audio)])  # no API key needed: nothing is drafted
+    assert res.exit_code == 0, res.output
+    case = load_case(tmp_path / "data" / "evals" / "cases" / "khatti-dal-mom")
+    assert case.reviewed and case.script == "khatti-dal" and case.speaker == "mom"
+    assert "scripted" in case.tags
+    assert any(i.name == "toor dal" and i.amount == 1.5 for i in case.recipe.ingredients)
+    res = runner.invoke(app, ["eval", "scripts"])
+    assert "1/" in res.output

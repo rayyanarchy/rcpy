@@ -12,6 +12,7 @@ from rcpy.config import get_settings
 from rcpy.errors import RcpyError
 from rcpy.evals import runner
 from rcpy.evals.gold import GoldCase, GoldIngredient, GoldRecipe, add_audio, list_cases, save_case
+from rcpy.evals.scripts import load_scripts, match_recording
 from rcpy.strategies import STRATEGIES, parse_audio
 
 app = typer.Typer(help="Measure how accurately strategies turn audio into recipes.", no_args_is_help=True)
@@ -73,9 +74,18 @@ def add(
     files: Annotated[list[Path], typer.Argument(help="Recording(s) to add as eval cases.")],
     bootstrap: Annotated[bool, typer.Option(help="Pre-fill gold.json from a model run, to correct by hand.")] = True,
     strategy: Annotated[str, typer.Option("-s", "--strategy", help="Strategy used to pre-fill.")] = "single",
+    scripts_dir: Annotated[
+        Path | None, typer.Option("--scripts", help="Dictation scripts folder (default: <EVALS_DIR>/scripts).")
+    ] = None,
 ) -> None:
-    """Add recordings as cases. Each gets a gold.json to correct, then mark reviewed."""
+    """Add recordings as cases.
+
+    A recording named after a dictation script (khatti-dal.m4a, or khatti-dal--mom.m4a)
+    takes its answer key from the script and is ready to run. Any other recording gets a
+    gold.json drafted by the model, to correct by hand and then mark reviewed.
+    """
     settings = get_settings()
+    scripts = load_scripts(scripts_dir or Path(settings.evals_dir) / "scripts")
     failures = 0
     for path in files:
         if not path.is_file():
@@ -87,6 +97,11 @@ def add(
             case_dir = add_audio(settings.data_dir, path, case_id)
         except FileExistsError as exc:
             err.print(f"[yellow]skip:[/yellow] {exc}")
+            continue
+        script_id, speaker = match_recording(path.stem)
+        if script_id in scripts:
+            save_case(case_dir, scripts[script_id].to_case(case_id, speaker))
+            err.print(f"[green]added[/green] {case_id} [dim](answer key from {script_id}.md)[/dim]")
             continue
         case = GoldCase(
             id=case_id,
@@ -106,6 +121,26 @@ def add(
         err.print(f"[green]added[/green] {case_dir / 'gold.json'}")
     if failures:
         raise typer.Exit(code=1)
+
+
+@app.command("scripts")
+def scripts_(
+    scripts_dir: Annotated[Path | None, typer.Option("--scripts", help="Default: <EVALS_DIR>/scripts.")] = None,
+) -> None:
+    """Show the dictation scripts, who reads each one, and which are recorded."""
+    settings = get_settings()
+    scripts = load_scripts(scripts_dir or Path(settings.evals_dir) / "scripts")
+    recorded: dict[str, int] = {}
+    for _, case in list_cases(settings.data_dir):
+        if case.script:
+            recorded[case.script] = recorded.get(case.script, 0) + 1
+    table = Table("script", "reader", "language", "length", "recorded", "tags")
+    for s in sorted(scripts.values(), key=lambda s: (s.speaker, s.id)):
+        table.add_row(
+            s.id, s.speaker, s.language, s.length.removeprefix("about "), str(recorded.get(s.id, "")), ", ".join(s.tags)
+        )
+    out.print(table)
+    err.print(f"{sum(1 for s in scripts if s in recorded)}/{len(scripts)} scripts recorded", highlight=False)
 
 
 @app.command("list")
