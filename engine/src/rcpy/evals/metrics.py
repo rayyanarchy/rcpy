@@ -5,7 +5,7 @@ import statistics
 from dataclasses import asdict, dataclass, field, fields
 
 from rcpy.evals.gold import GoldRecipe
-from rcpy.evals.match import SYNONYMS, align, name_similarity, quantity_correct
+from rcpy.evals.match import SYNONYMS, align, name_similarity, quantity_correct, tokens
 from rcpy.schema import Recipe
 
 # Function words that carry no cooking content, for the step-coverage metric.
@@ -150,7 +150,20 @@ class CaseScore:
     wrong_quantity: list[str] = field(default_factory=list)
 
 
+# Plain water is left out of ingredient scoring on both sides: whether a model lists
+# "water" or "water for soaking" says nothing about how well it read the recipe.
+_WATER_WORDS = {"water", "hot", "warm", "cold", "chilled", "boiling", "lukewarm", "soaking", "washing", "plain"}
+
+
+def _is_water(name: str) -> bool:
+    words = tokens(name)
+    return "water" in words and words <= _WATER_WORDS
+
+
 def score_case(case_id: str, gold: GoldRecipe, pred: Recipe | None, error: str | None = None) -> CaseScore:
+    gold = gold.model_copy(update={"ingredients": [g for g in gold.ingredients if not _is_water(g.name)]})
+    if pred is not None:
+        pred = pred.model_copy(update={"ingredients": [p for p in pred.ingredients if not _is_water(p.name)]})
     s = CaseScore(case_id=case_id, error=error, gold_ingredients=len(gold.ingredients), gold_steps=len(gold.steps))
     gold_words = set().union(*(_content_words(t) for t in gold.steps))
     s.gold_step_words = len(gold_words)

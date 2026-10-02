@@ -104,6 +104,8 @@ SYNONYMS = {
     "kothimeer": "coriander",
     "cilantro": "coriander",
     "mirch": "chili",
+    "mirchein": "chili",
+    "mirchen": "chili",
     "mirchi": "chili",
     "chilli": "chili",
     "chilly": "chili",

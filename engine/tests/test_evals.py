@@ -132,3 +132,17 @@ def test_add_without_bootstrap_writes_template(tmp_path, monkeypatch):
     assert res.exit_code == 0, res.output
     case = GoldCase.model_validate_json((tmp_path / "data" / "evals" / "cases" / "dal" / "gold.json").read_text())
     assert not case.reviewed
+
+
+def test_plain_water_is_not_scored(result):
+    from rcpy.schema import Ingredient
+
+    gold = _gold().model_copy(
+        update={"ingredients": [*_gold().ingredients, GoldIngredient(name="paani", amount=2, unit=Unit.CUP)]}
+    )
+    extra = [Ingredient(quantity="", amount=None, unit=Unit.ITEM, name="water for soaking", uncertain=False)]
+    pred = result.recipe.model_copy(update={"ingredients": [*result.recipe.ingredients, *extra]})
+    assert score_case("x", gold, pred).gold_ingredients == 4
+    assert "water for soaking" not in score_case("x", gold, pred).extra
+    tamarind = GoldIngredient(name="tamarind water", amount=None)
+    assert score_case("x", _gold().model_copy(update={"ingredients": [tamarind]}), None).gold_ingredients == 1
