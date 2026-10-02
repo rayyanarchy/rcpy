@@ -1,6 +1,6 @@
 # ADR-0001: Where the eval recordings and their answers come from
 
-**Status:** Proposed
+**Status:** Accepted (revised from the proposal the same day; see Decision)
 **Date:** 2026-10-03
 **Deciders:** Rayyan
 
@@ -20,17 +20,18 @@ Facts that shape the decision:
 
 ## Decision
 
-1. **Leave the 4 MB limit as it is.** Add a preparation step to `rcpy eval add` that transcodes anything that isn't already compressed speech (WAV, FLAC, or anything over 20 MB) to Opus at 32 kbps with ffmpeg before it goes into the case folder.
-2. **Use the 30 videos now, as a separate slice tagged `youtube`**, not as the headline. Every result is reported per slice. The results page labels this slice "YouTube cooking videos (in the wild)".
-3. **Bootstrap gold from the video's own description, not only from a model.** Many recipe videos list ingredients with amounts in the description. A new `rcpy eval import-youtube links.txt` step uses yt-dlp to fetch metadata only (title, channel, description, and subtitles where the creator uploaded them) into a `reference.md` beside each `gold.json`. Reviewers correct the model draft against both the audio and the description. This lowers the bias toward whichever strategy wrote the draft, and makes ingredient review much faster than watching the whole video.
-4. **Prioritise ingredients when reviewing videos.** For `youtube` cases, the ingredients and amounts must be checked against the audio. Steps can be marked `steps_reviewed: false`, and step metrics are reported only for cases where they are true. This keeps the labelling to roughly an hour per ten videos instead of a full watch of each.
-5. **Keep own dictations as the headline slice, at a smaller size.** Aim for 10–15 family dictations tagged `dictation`. These match what the product actually receives, and they are the numbers a recruiter should see first. A third of each slice is tagged `holdout`.
-6. **Don't publish other people's content.** The audio, transcripts and descriptions stay in git-ignored `data/evals/`. The repo gets aggregate scores and per-case counts. Cases are named by video ID and credited in `engine/evals/SOURCES.md` (channel, title, link). The failure examples on the results page show only ingredient names and amounts, never quoted speech.
-7. **Defer synthetic audio.** Revisit it later as a small "stress" slice (see Option C).
+**Option E: scripted family dictations.** Thirty-six recipes are written to be read aloud ([`engine/evals/scripts/`](../../engine/evals/scripts/README.md)), with the human errors built in, and read by three people: Mom (mostly Urdu/Hindi), Sister (Hinglish) and Rayyan (English with desi words). Each script carries its own answer key, so a recording named after its script is a scored case with no labelling.
+
+1. **The 4 MB limit stays.** It isn't in the eval path. Phone voice memos are compressed and short, so no transcoding step is needed either.
+2. **The YouTube videos are not used.** Their format (long, edited narration) isn't what the product receives, and the audio isn't ours to build on. Nothing from them enters the repo.
+3. **The gold is written before any model sees the audio**, so it can't lean toward whichever strategy would have drafted it.
+4. **The bias that comes with scripts is known and tracked.** Read speech is more fluent than spontaneous speech, and the corrections are performed rather than natural. Every scripted case carries the `scripted` tag. A few unscripted recordings of dishes the family really cooks, tagged `freestyle` and labelled by hand, give a check on how far the scripted numbers carry over.
+5. **A third of the scripts are `holdout`**, four per reader, and are not looked at while tuning prompts.
+6. **Synthetic TTS audio is still deferred** (Option C).
 
 ## Options Considered
 
-### Option A: YouTube videos as an in-the-wild slice, with gold seeded from descriptions (chosen)
+### Option A: YouTube videos as an in-the-wild slice, with gold seeded from descriptions (first proposal, not chosen)
 
 | Dimension | Assessment |
 | --- | --- |
@@ -72,22 +73,33 @@ Facts that shape the decision:
 **Pros:** cleanest story, and it matches the product.
 **Cons:** blocks the whole comparison and the results page indefinitely.
 
+### Option E: Scripted dictations with answer keys, read by family (chosen)
+
+| Dimension | Assessment |
+| --- | --- |
+| Complexity | Low: a script format, a parser, and matching recordings to scripts by file name |
+| Cost | Short audio, about 1–2 minutes each, so a full pass is cheap |
+| Realism | High for format and speakers, medium for spontaneity |
+| Labelling effort | None, beyond fixing gold where a reader changed an amount |
+
+**Pros:** exactly the product's input (people dictating recipes on a phone, in their own languages); exact gold with no model in the loop; failure modes are planted deliberately and tagged; it's ours to publish, so the scripts themselves can be shown; about an hour of recording.
+**Cons:** read speech is cleaner than spontaneous speech; the script writer's idea of a "mistake" may not match real ones; three speakers is a small set of voices.
+
 ## Trade-off Analysis
 
-The data that is realistic (own dictations) doesn't exist yet. The data that exists (videos) is realistic about speech but not about format. The data that is easy to label (synthetic) isn't realistic. Reporting by slice means one doesn't have to choose: the videos unblock the comparison now and show robustness, the dictations carry the headline once recorded, and synthetic cases later pin down specific failure modes. The main risk with the videos is labelling cost, and seeding gold from descriptions plus reviewing ingredients first targets exactly that. The second risk is overclaiming, and that's handled by always naming the slice next to the number.
+The product is dictation, so the headline numbers have to come from dictation. Scripts give that with exact answers and no labelling, at the cost of some spontaneity. A small `freestyle` slice measures how much that cost is. The YouTube videos would have added noisy speech, but in the wrong format and with material that isn't ours. Synthetic audio stays useful later for targeted regression cases.
 
 ## Consequences
 
-- **Easier:** the benchmark can run this week; the results page gets real numbers; transcription is tested on long, noisy audio.
-- **Harder:** every metric needs a slice next to it; long cases make each run slower and more expensive (use `--jobs` and fewer repeats on this slice).
-- **Revisit:** whether to trim videos to the cooking portion; adding a transcription error-rate metric if creator captions turn out to be good; the synthetic stress slice; which strategy is the default once the `dictation` slice exists, since that is the slice the default should be chosen on.
+- **Easier:** the benchmark can run as soon as the recordings exist; gold is independent of every strategy; the scripts double as documentation of what the system is tested against.
+- **Harder:** keeping the answer keys in line with the scoring rules (enforced by `tests/test_scripts.py`, which checks every answer-key ingredient is actually said).
+- **Revisit:** if `freestyle` scores differ a lot from `scripted`, collect more unscripted recordings before choosing the default strategy.
 
 ## Action Items
 
-1. [ ] `rcpy eval add`: transcode WAV, FLAC and files over 20 MB to Opus at 32 kbps with ffmpeg; add a `--tag` option.
-2. [ ] `rcpy eval import-youtube links.txt --audio-dir …`: match each WAV to its link, fetch metadata and creator subtitles with yt-dlp (`--skip-download`), write `reference.md`, tag the case `youtube`, and add it to `SOURCES.md`.
-3. [ ] Gold: add `steps_reviewed` to `GoldCase`; count step metrics only where it is true; update `engine/evals/README.md`.
-4. [ ] Reporting: per-slice tables in `rcpy eval compare` and on the results page, with `dictation` first when it exists.
-5. [ ] Review the 30 videos' ingredients (Rayyan), tag 10 as `holdout`, and run all three strategies.
-6. [ ] Record 10–15 family dictations, tagged `dictation`.
-7. [ ] Later: the synthetic stress slice.
+1. [x] Write 36 scripts with answer keys, a third of them held out (`engine/evals/scripts/`).
+2. [x] `rcpy eval add` takes the answer key from a script when the file is named after one; `rcpy eval scripts` shows what's recorded.
+3. [x] Scoring rules: plain water is ignored on both sides; pinch, handful, repeated and excluded ingredients are documented.
+4. [ ] Record (Mom, Sister, Rayyan), then `rcpy eval add` and run all three strategies with 3 repeats.
+5. [ ] A few `freestyle` recordings, labelled by hand.
+6. [ ] Later: the synthetic stress slice.

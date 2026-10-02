@@ -21,28 +21,11 @@ Only reviewed cases are used unless you pass `--include-unreviewed`. Scores agai
 
 ## Recording the dataset
 
-Aim for 30 to 50 recordings. Variety matters more than volume: 30 varied recordings are worth more than 50 of the same dish read the same way. Try to cover:
+The main set is **[36 dictation scripts](scripts/README.md)**, read aloud by three people. Each script carries its own answer key, so a recording named after its script (`khatti-dal.m4a`) is scored with no labelling. The scripts deliberately include the things models get wrong: self-corrections, ranges, vague amounts, desi measures (*pav*, *katori*, *chammach*), ingredients only mentioned inside a step, forgotten-then-added ingredients, explicitly excluded ones, and times or servings that are sometimes said and sometimes not.
 
-| Dimension | Aim for a mix of |
-| --- | --- |
-| Speaker | you, plus 2 or 3 family members |
-| Language | English only, English mixed with Hindi/Urdu, mostly Hindi/Urdu |
-| Length | under 1 minute, 1 to 3 minutes, over 5 minutes |
-| Setting | a quiet room, a real kitchen (exhaust fan, sizzling, people talking) |
-| Device | phone voice memo (`.m4a`), the RCPY web recorder (`.webm`/`.mp4`) |
+Unscripted recordings work too: add them with `rcpy eval add`, which drafts a `gold.json` for you to correct (below). Tag them `freestyle`, so results can be split between read and spontaneous speech.
 
-Also include recordings with each of these on purpose, because they are where models go wrong:
-
-- self-corrections: "two cups, no, one and a half"
-- ranges: "15 20 kali", "3 to 4 minutes"
-- vague amounts: "thoda sa", "a pinch", "to taste", "a handful"
-- desi measures: pav kilo, katori, bada or chota chammach
-- ingredients mentioned only inside a step: "fry in ghee"
-- servings or times that are actually spoken, and recipes where they aren't
-
-Add tags in `gold.json` so results can be split by them. Suggested tags: `english`, `mixed`, `hindustani`, `noisy`, `long`, `corrections`, `ranges`, `vague`, `desi-measures`.
-
-**Hold-out set:** tag about a third of the cases `holdout` and don't read their failures while tuning prompts. Report the holdout numbers (`by_tag.holdout` in each summary) as the headline result, since the other cases are the ones you tuned on.
+**Hold-out set:** about a third of the scripts are tagged `holdout`. Don't read their failures while tuning prompts. The holdout numbers (`by_tag.holdout` in each summary) are the headline result, since the other cases are the ones prompts were tuned on.
 
 ## Writing gold.json
 
@@ -79,7 +62,10 @@ The rules follow what the metrics check:
 - **One entry per ingredient**, even if it's used twice ("salt" once, not "salt for the batter" and "salt for the egg"). Include ingredients that only come up inside a step.
 - **name** is the plain English name without prep words ("onion", not "onion, finely chopped"). Put Hindi/Urdu names and spellings in **aliases**. Matching is fuzzy and already knows common words like haldi, jeera and kothimeer, but aliases make it certain.
 - **amount and unit are exactly what was spoken.** Don't convert: "adha kilo" is 0.5 KILOGRAM. The scorer accepts any equivalent answer, so a prediction of 500 GRAM also counts as correct. For a range, put the low value in `amount` and the high value in `amount_max`. If no number was spoken ("to taste", "thoda"), set `amount` to `null`. A prediction that invents a number then counts as wrong.
-- **Vague counted measures** ("2 katori", "a handful") are `amount: 2` or `1` with unit `ITEM`.
+- **Vague counted measures** ("2 katori", "a handful", "ek chutki", "a pinch") are `amount: 2` or `1` with unit `ITEM`. Without a count or "a" ("chutki bhar", "thoda sa") the amount is `null`. A size comparison ("imli, nimbu ke barabar") is also `null`.
+- **An ingredient used twice** is one entry, with the amount that was actually said ("thoda butter" and later "1 tablespoon butter" is butter, 1 TABLESPOON).
+- **Explicitly excluded** ingredients ("piyaz nahi daalte") are not listed.
+- **Plain water** ("teen glass paani", "water for soaking") is left out. The scorer ignores it on both sides. Flavoured liquids such as tamarind water or stock do count.
 - **servings, prep_minutes and cook_minutes** are only filled in when they were actually said. Filling them in otherwise counts as invented.
 - **steps** cover every spoken instruction, in order, in plain English. The wording doesn't have to match the model's, because the step metrics compare content words (ingredients, actions, times) rather than whole sentences.
 - Set **reviewed** to `true` only after checking every field against the audio.
