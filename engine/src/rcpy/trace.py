@@ -43,15 +43,14 @@ class Trace:
 
     @contextmanager
     def stage(self, name: str, model: str) -> Iterator[Stage]:
+        """Time one model call. Only successful calls are recorded: a failed attempt
+        that is retried would otherwise count twice."""
         stage = Stage(name=name, model=model)
         self.notify({"event": "stage", "name": name, "status": "start"})
         start = time.perf_counter()
-        try:
-            yield stage
-        finally:
-            stage.seconds = time.perf_counter() - start
-            self.stages.append(stage)
-        # Only reached when the call succeeded.
+        yield stage
+        stage.seconds = time.perf_counter() - start
+        self.stages.append(stage)
         self.notify({"event": "stage", "name": name, "status": "done", "seconds": round(stage.seconds, 2)})
 
     @property

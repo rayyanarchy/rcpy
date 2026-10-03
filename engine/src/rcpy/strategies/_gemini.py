@@ -5,7 +5,9 @@ turns SDK/network failures into user-safe `RcpyError`s.
 """
 
 import logging
-from collections.abc import Iterator
+import re
+import time
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager, suppress
 from pathlib import Path
 
@@ -30,6 +32,21 @@ class _DropAfcNotice(logging.Filter):
 
 logging.getLogger("google_genai.models").addFilter(_DropAfcNotice())
 
+# Rate limits (429) and overload (503) are retried, waiting as long as Gemini asks.
+# A wait longer than MAX_WAIT means a daily quota, which retrying won't fix.
+RETRY_STATUS = {429, 503}
+MAX_ATTEMPTS = 6
+MAX_WAIT = 90.0
+
+
+def retry_delay(exc: genai_errors.APIError, attempt: int) -> float | None:
+    """Seconds to wait before trying again, or None to give up."""
+    if exc.code not in RETRY_STATUS or attempt >= MAX_ATTEMPTS:
+        return None
+    hint = re.search(r"retry in ([\d.]+)s", str(exc.message or ""))
+    delay = float(hint.group(1)) + 1 if hint else min(MAX_WAIT, 2.0**attempt)
+    return delay if delay <= MAX_WAIT else None
+
 
 class Gemini:
     def __init__(self, settings: Settings, label: str, trace: Trace | None = None):
@@ -42,6 +59,19 @@ class Gemini:
         self.settings = settings
         self.label = label  # file name, prefixed to error messages
         self.trace = trace if trace is not None else Trace()
+
+    def _with_retries[T](self, call: Callable[[], T]) -> T:
+        attempt = 0
+        while True:
+            attempt += 1
+            try:
+                return call()
+            except genai_errors.APIError as exc:
+                delay = retry_delay(exc, attempt)
+                if delay is None:
+                    raise
+                logging.getLogger("rcpy").info("%s: Gemini %s, retrying in %.0fs", self.label, exc.code, delay)
+                time.sleep(delay)
 
     @contextmanager
     def _errors(self) -> Iterator[None]:
@@ -58,7 +88,9 @@ class Gemini:
         uploaded = None
         try:
             with self._errors():
-                uploaded = self.client.files.upload(file=path, config=types.UploadFileConfig(mime_type=mime))
+                uploaded = self._with_retries(
+                    lambda: self.client.files.upload(file=path, config=types.UploadFileConfig(mime_type=mime))
+                )
             yield uploaded
         finally:
             if uploaded is not None and uploaded.name:
@@ -68,16 +100,22 @@ class Gemini:
     def generate[M: BaseModel](self, stage: str, contents: list, schema: type[M], model: str | None = None) -> M:
         """One structured call: `contents` in, a validated `schema` instance out."""
         model = model or self.settings.gemini_model
-        with self.trace.stage(stage, model) as record, self._errors():
-            response = self.client.models.generate_content(
-                model=model,
-                contents=contents,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    response_schema=schema,
-                ),
-            )
-            record.record_usage(response.usage_metadata)
+
+        def call():
+            with self.trace.stage(stage, model) as record:
+                response = self.client.models.generate_content(
+                    model=model,
+                    contents=contents,
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                        response_schema=schema,
+                    ),
+                )
+                record.record_usage(response.usage_metadata)
+            return response
+
+        with self._errors():
+            response = self._with_retries(call)
         try:
             return schema.model_validate_json(response.text or "")
         except ValidationError as exc:

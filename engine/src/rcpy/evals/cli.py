@@ -204,6 +204,33 @@ def run(
 
 
 @app.command()
+def resume(
+    run_id: Annotated[str, typer.Argument(help="Run id from a previous `rcpy eval run`.")],
+    jobs: Annotated[int, typer.Option("-j", "--jobs", min=1, help="Parallel model calls.")] = 1,
+) -> None:
+    """Redo only the predictions of a run that failed (rate limits, network), then rescore."""
+    settings = get_settings()
+    try:
+        total = len(runner.failed_predictions(settings, run_id))
+    except RcpyError as exc:
+        _fail(exc)
+    if not total:
+        err.print("Nothing to redo.")
+        _print_summaries([runner.rescore(settings, run_id)])
+        return
+    done = 0
+
+    def progress(case_id: str, rep: int, error: str | None) -> None:
+        nonlocal done
+        done += 1
+        mark = "[red]failed[/red]" if error else "[green]ok[/green]"
+        err.print(f"[dim]{done}/{total}[/dim] {case_id} #{rep + 1} {mark}")
+
+    err.print(f"Redoing {total} failed prediction(s) of {run_id}")
+    _print_summaries([runner.resume(settings, run_id, jobs=jobs, on_done=progress)])
+
+
+@app.command()
 def rescore(run_id: Annotated[str, typer.Argument(help="Run id from a previous `rcpy eval run`.")]) -> None:
     """Re-grade a cached run against the current gold files (no model calls)."""
     try:

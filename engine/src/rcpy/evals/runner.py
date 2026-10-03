@@ -61,17 +61,18 @@ def select_cases(settings: Settings, ids: list[str] | None, include_unreviewed: 
     return selected
 
 
-def run(
+OnDone = Callable[[str, int, str | None], None]
+
+
+def _predict_all(
     settings: Settings,
     strategy: str,
-    cases: list[tuple[Path, GoldCase]],
-    repeats: int = 1,
-    jobs: int = 4,
-    on_done: Callable[[str, int, str | None], None] | None = None,
-) -> dict:
-    run_id = f"{datetime.now():%Y%m%d-%H%M%S}-{strategy}"
-    out = runs_dir(settings) / run_id
-    out.mkdir(parents=True)
+    out: Path,
+    work: list[tuple[Path, GoldCase, int]],
+    jobs: int,
+    on_done: OnDone | None,
+) -> None:
+    """Run each (case, repeat) and write its record to `out`, overwriting any earlier one."""
 
     def one(item: tuple[Path, GoldCase, int]) -> None:
         case_dir, case, rep = item
@@ -94,10 +95,21 @@ def run(
         if on_done:
             on_done(case.id, rep, error)
 
-    work = [(d, c, rep) for rep in range(repeats) for d, c in cases]
     with ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
         list(pool.map(one, work))
 
+
+def run(
+    settings: Settings,
+    strategy: str,
+    cases: list[tuple[Path, GoldCase]],
+    repeats: int = 1,
+    jobs: int = 4,
+    on_done: OnDone | None = None,
+) -> dict:
+    run_id = f"{datetime.now():%Y%m%d-%H%M%S}-{strategy}"
+    out = runs_dir(settings) / run_id
+    out.mkdir(parents=True)
     meta = {
         "run_id": run_id,
         "strategy": strategy,
@@ -107,7 +119,32 @@ def run(
         "git": _git_sha(),
         "repeats": repeats,
     }
+    # Written first so an interrupted run can be resumed.
     (out / "run.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+    _predict_all(settings, strategy, out, [(d, c, rep) for rep in range(repeats) for d, c in cases], jobs, on_done)
+    return rescore(settings, run_id)
+
+
+def failed_predictions(settings: Settings, run_id: str) -> list[tuple[Path, GoldCase, int]]:
+    """The (case, repeat) pairs of a cached run that errored or never finished."""
+    out = runs_dir(settings) / run_id
+    if not (out / "run.json").is_file():
+        raise RcpyError(f"no cached run {run_id!r} in {out.parent}")
+    meta = json.loads((out / "run.json").read_text(encoding="utf-8"))
+    todo = []
+    for case_dir, case in list_cases(settings.data_dir):
+        for rep in range(meta["repeats"]):
+            path = out / f"{case.id}.{rep}.json"
+            if not path.is_file() or json.loads(path.read_text(encoding="utf-8"))["error"]:
+                todo.append((case_dir, case, rep))
+    return todo
+
+
+def resume(settings: Settings, run_id: str, jobs: int = 1, on_done: OnDone | None = None) -> dict:
+    """Redo only the predictions that failed (e.g. on a rate limit), then rescore."""
+    meta = json.loads((runs_dir(settings) / run_id / "run.json").read_text(encoding="utf-8"))
+    todo = failed_predictions(settings, run_id)
+    _predict_all(settings, meta["strategy"], runs_dir(settings) / run_id, todo, jobs, on_done)
     return rescore(settings, run_id)
 
 

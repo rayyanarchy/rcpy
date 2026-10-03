@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
@@ -170,3 +171,27 @@ def test_a_misspelled_recording_name_uses_the_closest_script(tmp_path, monkeypat
     assert res.exit_code == 0, res.output
     assert "using masala-omelette.md" in res.output
     assert load_case(tmp_path / "data" / "evals" / "cases" / "masala-omlette").script == "masala-omelette"
+
+
+def test_resume_redoes_only_failed_predictions(tmp_path, monkeypatch):
+    monkeypatch.setenv("DEMO_MODE", "true")
+    monkeypatch.setenv("DATA_DIR", str(tmp_path / "data"))
+    monkeypatch.setenv("EVALS_DIR", str(tmp_path / "evals"))
+    for name in ("poha", "kheer"):
+        (tmp_path / f"{name}.m4a").write_bytes(b"x")
+        scripts = Path(__file__).resolve().parents[1] / "evals" / "scripts"
+        assert (
+            runner.invoke(app, ["eval", "add", str(tmp_path / f"{name}.m4a"), "--scripts", str(scripts)]).exit_code == 0
+        )
+    res = runner.invoke(app, ["eval", "run"])
+    assert res.exit_code == 0, res.output
+    [run_dir] = (tmp_path / "data" / "evals" / "runs").iterdir()
+    record = run_dir / "poha.0.json"
+    failed = {**json.loads(record.read_text()), "prediction": None, "error": "429 quota"}
+    record.write_text(json.dumps(failed))
+
+    res = runner.invoke(app, ["eval", "resume", run_dir.name])
+    assert res.exit_code == 0, res.output
+    assert "Redoing 1 failed prediction" in res.output
+    assert json.loads(record.read_text())["error"] is None
+    assert "Nothing to redo" in runner.invoke(app, ["eval", "resume", run_dir.name]).output
