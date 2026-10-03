@@ -12,6 +12,8 @@ def test_retry_delay_follows_geminis_hint_and_gives_up_on_long_waits():
     assert retry_delay(_error(429, "Quota exceeded. Please retry in 15.58s."), 1) == 16.58
     assert retry_delay(_error(503, "overloaded"), 2) == 4.0
     assert retry_delay(_error(429, "Please retry in 3600s."), 1) is None  # a daily quota: don't wait
+    assert retry_delay(_error(429, "Please retry in 9h10m57.29s."), 1) is None
+    assert retry_delay(_error(429, "Please retry in 1m5s."), 1) == 66.0
     assert retry_delay(_error(400, "bad request"), 1) is None
     assert retry_delay(_error(429, "Please retry in 1s."), _gemini.MAX_ATTEMPTS) is None
 

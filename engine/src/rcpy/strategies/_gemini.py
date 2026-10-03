@@ -43,8 +43,12 @@ def retry_delay(exc: genai_errors.APIError, attempt: int) -> float | None:
     """Seconds to wait before trying again, or None to give up."""
     if exc.code not in RETRY_STATUS or attempt >= MAX_ATTEMPTS:
         return None
-    hint = re.search(r"retry in ([\d.]+)s", str(exc.message or ""))
-    delay = float(hint.group(1)) + 1 if hint else min(MAX_WAIT, 2.0**attempt)
+    hint = re.search(r"retry in ((?:[\d.]+[hms])+)", str(exc.message or ""))
+    if hint:  # "15.5s", or "9h10m57.2s" for a daily quota
+        units = {"h": 3600, "m": 60, "s": 1}
+        delay = sum(float(n) * units[u] for n, u in re.findall(r"([\d.]+)([hms])", hint.group(1))) + 1
+    else:
+        delay = min(MAX_WAIT, 2.0**attempt)
     return delay if delay <= MAX_WAIT else None
 
 
