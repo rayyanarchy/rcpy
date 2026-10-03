@@ -1,6 +1,7 @@
 """`rcpy eval ...`: build the eval set, run strategies over it, compare runs."""
 
 import re
+from difflib import get_close_matches
 from pathlib import Path
 from typing import Annotated
 
@@ -99,6 +100,9 @@ def add(
             err.print(f"[yellow]skip:[/yellow] {exc}")
             continue
         script_id, speaker = match_recording(path.stem)
+        if script_id not in scripts and (close := get_close_matches(script_id, list(scripts), n=1, cutoff=0.85)):
+            err.print(f"[yellow]note:[/yellow] {path.name} has no script of that name; using {close[0]}.md")
+            script_id = close[0]
         if script_id in scripts:
             save_case(case_dir, scripts[script_id].to_case(case_id, speaker))
             err.print(f"[green]added[/green] {case_id} [dim](answer key from {script_id}.md)[/dim]")

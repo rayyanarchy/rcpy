@@ -160,3 +160,13 @@ def test_recordings_named_after_scripts_take_their_answer_key(tmp_path, monkeypa
     assert any(i.name == "toor dal" and i.amount == 1.5 for i in case.recipe.ingredients)
     res = runner.invoke(app, ["eval", "scripts"])
     assert "1/" in res.output
+
+
+def test_a_misspelled_recording_name_uses_the_closest_script(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path / "data"))
+    audio = tmp_path / "masala-omlette.m4a"
+    audio.write_bytes(b"x")
+    res = runner.invoke(app, ["eval", "add", str(audio)])
+    assert res.exit_code == 0, res.output
+    assert "using masala-omelette.md" in res.output
+    assert load_case(tmp_path / "data" / "evals" / "cases" / "masala-omlette").script == "masala-omelette"
