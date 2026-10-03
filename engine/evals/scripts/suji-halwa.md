@@ -39,13 +39,15 @@ Don't read this part out. It's what the recording is scored against.
         "sooji"
       ],
       "amount": 1,
-      "unit": "ITEM"
+      "unit": "ITEM",
+      "vague": true
     },
     {
       "name": "ghee",
       "aliases": [],
       "amount": 0.5,
-      "unit": "ITEM"
+      "unit": "ITEM",
+      "vague": true
     },
     {
       "name": "sugar",
@@ -53,7 +55,8 @@ Don't read this part out. It's what the recording is scored against.
         "cheeni"
       ],
       "amount": 1,
-      "unit": "ITEM"
+      "unit": "ITEM",
+      "vague": true
     },
     {
       "name": "green cardamom",

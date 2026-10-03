@@ -153,8 +153,8 @@ TOKEN_RE = re.compile(r"[a-z]+")
 
 
 def _singular(word: str) -> str:
-    if len(word) > 4 and word.endswith("oes"):
-        return word[:-2]  # potatoes, tomatoes
+    if len(word) > 4 and word.endswith(("oes", "ies")):
+        return word[:-2]  # potatoes, tomatoes, chillies -> chilli, chilies -> chili
     if len(word) > 3 and word.endswith("s") and not word.endswith("ss"):
         return word[:-1]
     return word
@@ -204,6 +204,17 @@ def name_similarity(a: str, b: str) -> float:
 MATCH_THRESHOLD = 0.5
 
 
+_NOTE = re.compile(r"\(([^)]*)\)")
+
+
+def name_variants(name: str) -> list[str]:
+    """A predicted name plus its core, without the preparation notes models append:
+    "large green chillies, slit and seeded" -> also "large green chillies";
+    "tahini (sesame paste)" -> also "tahini" and "sesame paste"."""
+    core = re.split(r"[,(]", name, maxsplit=1)[0].strip()
+    return list(dict.fromkeys(v for v in (name, core, *_NOTE.findall(name)) if v.strip()))
+
+
 def align(gold_names: list[list[str]], pred_names: list[str]) -> list[tuple[int, int, float]]:
     """Pair gold and predicted ingredients one-to-one, best matches first.
 
@@ -215,7 +226,7 @@ def align(gold_names: list[list[str]], pred_names: list[str]) -> list[tuple[int,
     scored = []
     for gi, names in enumerate(gold_names):
         for pi, pred in enumerate(pred_names):
-            sim = max(name_similarity(n, pred) for n in names)
+            sim = max(name_similarity(n, v) for n in names for v in name_variants(pred))
             if sim >= MATCH_THRESHOLD:
                 scored.append((sim, gi, pi))
     scored.sort(key=lambda t: (-t[0], t[1], t[2]))
@@ -246,13 +257,24 @@ TOLERANCE = 0.03  # relative; absorbs rounding in conversions like 1 lb -> 450 g
 
 
 def quantity_correct(
-    gold_amount: float | None, gold_max: float | None, gold_unit: Unit, amount: float | None, unit: Unit
+    gold_amount: float | None,
+    gold_max: float | None,
+    gold_unit: Unit,
+    amount: float | None,
+    unit: Unit,
+    vague: bool = False,
 ) -> bool:
     """Is the predicted quantity equivalent to the gold one?
 
     No spoken amount must stay null (not invented). A spoken range accepts any
-    value inside it.
+    value inside it. A vague measure ("2 katori", "a pinch") has no real unit,
+    so only the number is checked, and leaving it empty is also accepted.
     """
+    if vague and gold_amount is not None:
+        if amount is None:
+            return True
+        high = gold_max if gold_max is not None else gold_amount
+        return gold_amount * (1 - TOLERANCE) <= amount <= high * (1 + TOLERANCE)
     if gold_amount is None or amount is None:
         return gold_amount is None and amount is None
     g_dim, g_factor = _BASE[gold_unit]

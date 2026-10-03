@@ -62,7 +62,8 @@ Don't read this part out. It's what the recording is scored against.
         "cashews almonds pistachios"
       ],
       "amount": 1,
-      "unit": "ITEM"
+      "unit": "ITEM",
+      "vague": true
     },
     {
       "name": "dates",

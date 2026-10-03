@@ -147,6 +147,27 @@ def scripts_(
     err.print(f"{sum(1 for s in scripts if s in recorded)}/{len(scripts)} scripts recorded", highlight=False)
 
 
+@app.command()
+def sync(
+    scripts_dir: Annotated[Path | None, typer.Option("--scripts", help="Default: <EVALS_DIR>/scripts.")] = None,
+) -> None:
+    """Copy each script's current answer key into the cases recorded from it.
+
+    Run after editing a script. This overwrites the case's gold recipe, including any
+    hand edits made for what a reader actually said.
+    """
+    settings = get_settings()
+    scripts = load_scripts(scripts_dir or Path(settings.evals_dir) / "scripts")
+    changed = 0
+    for case_dir, case in list_cases(settings.data_dir):
+        script = scripts.get(case.script)
+        if script and script.recipe != case.recipe:
+            save_case(case_dir, case.model_copy(update={"recipe": script.recipe}))
+            err.print(f"[green]updated[/green] {case.id}")
+            changed += 1
+    err.print(f"{changed} case(s) updated", highlight=False)
+
+
 @app.command("list")
 def list_() -> None:
     """Show the eval cases and whether they have been reviewed."""

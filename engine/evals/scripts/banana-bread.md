@@ -85,7 +85,8 @@ Don't read this part out. It's what the recording is scored against.
       "name": "salt",
       "aliases": [],
       "amount": 1,
-      "unit": "ITEM"
+      "unit": "ITEM",
+      "vague": true
     },
     {
       "name": "walnuts",
@@ -93,7 +94,8 @@ Don't read this part out. It's what the recording is scored against.
         "akhrot"
       ],
       "amount": 1,
-      "unit": "ITEM"
+      "unit": "ITEM",
+      "vague": true
     }
   ],
   "steps": [

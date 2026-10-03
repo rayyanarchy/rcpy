@@ -14,6 +14,10 @@ class GoldIngredient(BaseModel):
     amount: float | None = Field(description="Spoken amount; null when none was spoken ('to taste').")
     amount_max: float | None = Field(default=None, description="Upper end of a spoken range ('15 to 20').")
     unit: Unit = Unit.ITEM
+    vague: bool = Field(
+        default=False,
+        description="A measure with no real unit (katori, glass, handful, pinch): only the number is scored.",
+    )
 
 
 class GoldRecipe(BaseModel):

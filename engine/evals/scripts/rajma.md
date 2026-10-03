@@ -135,7 +135,8 @@ Don't read this part out. It's what the recording is scored against.
         "makhan"
       ],
       "amount": 1,
-      "unit": "ITEM"
+      "unit": "ITEM",
+      "vague": true
     },
     {
       "name": "coriander leaves",

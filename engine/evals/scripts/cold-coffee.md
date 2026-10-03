@@ -59,7 +59,8 @@ Don't read this part out. It's what the recording is scored against.
       "name": "vanilla ice cream",
       "aliases": [],
       "amount": 1,
-      "unit": "ITEM"
+      "unit": "ITEM",
+      "vague": true
     },
     {
       "name": "chocolate syrup",

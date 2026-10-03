@@ -23,6 +23,7 @@ runner = CliRunner()
         ("red chilli powder", "red chili powder"),
         ("oil for frying", "vegetable oil"),
         ("bread crumbs for coating", "breadcrumbs"),
+        ("large green chillies", "large green chilies"),
     ],
 )
 def test_same_ingredient_matches(a, b):
@@ -35,6 +36,19 @@ def test_same_ingredient_matches(a, b):
 )
 def test_different_ingredients_do_not_match(a, b):
     assert name_similarity(a, b) < 0.5
+
+
+def test_align_ignores_preparation_notes_in_predicted_names():
+    gold = [["large green chilies"], ["chickpeas"], ["chickpea liquid", "aquafaba"]]
+    pred = ["large green chillies, thick and less spicy, slit and seeded", "chickpeas, drained (keep the liquid)"]
+    assert [(g, p) for g, p, _ in align(gold, pred)] == [(0, 0), (1, 1)]
+
+
+def test_vague_measures_score_only_the_number():
+    assert quantity_correct(1.5, None, Unit.ITEM, 1.5, Unit.CUP, vague=True)  # "dedh katori" as 1.5 cups
+    assert quantity_correct(1, None, Unit.ITEM, None, Unit.ITEM, vague=True)  # "a pinch" left empty
+    assert not quantity_correct(2, None, Unit.ITEM, 3, Unit.CUP, vague=True)
+    assert not quantity_correct(1.5, None, Unit.ITEM, 1.5, Unit.CUP)  # not vague: units must agree
 
 
 def test_align_is_one_to_one_and_prefers_best_match():
@@ -195,3 +209,18 @@ def test_resume_redoes_only_failed_predictions(tmp_path, monkeypatch):
     assert "Redoing 1 failed prediction" in res.output
     assert json.loads(record.read_text())["error"] is None
     assert "Nothing to redo" in runner.invoke(app, ["eval", "resume", run_dir.name]).output
+
+
+def test_sync_copies_edited_answer_keys_into_cases(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path / "data"))
+    scripts = tmp_path / "scripts"
+    scripts.mkdir()
+    source = Path(__file__).resolve().parents[1] / "evals" / "scripts" / "poha.md"
+    (scripts / "poha.md").write_text(source.read_text())
+    (tmp_path / "poha.m4a").write_bytes(b"x")
+    assert runner.invoke(app, ["eval", "add", str(tmp_path / "poha.m4a"), "--scripts", str(scripts)]).exit_code == 0
+
+    (scripts / "poha.md").write_text(source.read_text().replace('"name": "Kanda Poha"', '"name": "Poha"'))
+    res = runner.invoke(app, ["eval", "sync", "--scripts", str(scripts)])
+    assert "1 case(s) updated" in res.output
+    assert load_case(tmp_path / "data" / "evals" / "cases" / "poha").recipe.name == "Poha"

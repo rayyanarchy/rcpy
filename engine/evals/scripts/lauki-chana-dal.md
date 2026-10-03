@@ -38,7 +38,8 @@ Don't read this part out. It's what the recording is scored against.
         "split chickpeas"
       ],
       "amount": 0.5,
-      "unit": "ITEM"
+      "unit": "ITEM",
+      "vague": true
     },
     {
       "name": "bottle gourd",
@@ -92,7 +93,8 @@ Don't read this part out. It's what the recording is scored against.
         "hing"
       ],
       "amount": 1,
-      "unit": "ITEM"
+      "unit": "ITEM",
+      "vague": true
     },
     {
       "name": "dried red chilies",

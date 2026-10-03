@@ -15,6 +15,8 @@ uv run rcpy eval run -s staged -n 3
 uv run rcpy eval compare                      # every saved run side by side
 uv run rcpy eval compare --markdown           # the same, as a table for the README
 uv run rcpy eval rescore <run_id>             # re-grade cached predictions after fixing a gold file
+uv run rcpy eval resume <run_id>              # redo only the predictions that failed (rate limits)
+uv run rcpy eval sync                         # copy edited script answer keys into recorded cases
 ```
 
 Only reviewed cases are used unless you pass `--include-unreviewed`. Scores against unreviewed drafts are biased toward whichever strategy wrote the draft, so don't report them.
@@ -62,7 +64,7 @@ The rules follow what the metrics check:
 - **One entry per ingredient**, even if it's used twice ("salt" once, not "salt for the batter" and "salt for the egg"). Include ingredients that only come up inside a step.
 - **name** is the plain English name without prep words ("onion", not "onion, finely chopped"). Put Hindi/Urdu names and spellings in **aliases**. Matching is fuzzy and already knows common words like haldi, jeera and kothimeer, but aliases make it certain.
 - **amount and unit are exactly what was spoken.** Don't convert: "adha kilo" is 0.5 KILOGRAM. The scorer accepts any equivalent answer, so a prediction of 500 GRAM also counts as correct. For a range, put the low value in `amount` and the high value in `amount_max`. If no number was spoken ("to taste", "thoda"), set `amount` to `null`. A prediction that invents a number then counts as wrong.
-- **Vague counted measures** ("2 katori", "a handful", "ek chutki", "a pinch") are `amount: 2` or `1` with unit `ITEM`. Without a count or "a" ("chutki bhar", "thoda sa") the amount is `null`. A size comparison ("imli, nimbu ke barabar") is also `null`.
+- **Vague measures** ("2 katori", "a glass", "a handful", "ek chutki", "a pinch", "a cube") are the spoken number with unit `ITEM` and `"vague": true`. For these only the number is scored: "dedh katori" predicted as 1.5 cups is right, and leaving the amount empty is also accepted. Without a count or "a" ("chutki bhar", "thoda sa") the amount is `null`. A size comparison ("imli, nimbu ke barabar") is also `null`.
 - **An ingredient used twice** is one entry, with the amount that was actually said ("thoda butter" and later "1 tablespoon butter" is butter, 1 TABLESPOON).
 - **Explicitly excluded** ingredients ("piyaz nahi daalte") are not listed.
 - **Plain water** ("teen glass paani", "water for soaking") is left out. The scorer ignores it on both sides. Flavoured liquids such as tamarind water or stock do count.
@@ -83,3 +85,16 @@ The rules follow what the metrics check:
 | Latency, tokens, cost | Per recipe, across all stages. Costs need prices in `pricing.json`. |
 
 With `-n` greater than 1, each percentage shows ± one standard deviation across the repeats.
+
+## Scoring changes
+
+Scoring rules are part of the result, so changes are listed here. Every change is applied to every run by `rcpy eval rescore`, from cached predictions.
+
+- **v2 (2026-10-03, after the first full run on the scripted set).** Reading the errors showed most "wrong" answers were scoring bugs, not model mistakes:
+  - Predicted names carry preparation notes ("large green chillies, thick and less spicy, slit and seeded"), which pushed the similarity below the threshold. Matching now also tries the name without its notes and the words in brackets.
+  - "chillies" and "chilies" didn't reduce to the same word; `-ies` plurals are now handled.
+  - Vague measures demanded unit `ITEM`, so "1.5 katori" predicted as 1.5 cups was wrong, even though the web app itself maps katori to cups. Gold rows now carry `vague`, and only the number is scored.
+  - "Hot water for soaking tamarind" wasn't recognised as plain water. The name before "for"/"to" is checked now.
+  - Two answer keys were wrong (salt in the aloo paratha dough is half a teaspoon; pasta water is an ingredient in the desi pasta).
+
+  Effect on the first `single` run: ingredient F1 rose from 97.1% to 99.0%, and quantity accuracy from 90.6% to 95.8%. Rankings between strategies didn't change.

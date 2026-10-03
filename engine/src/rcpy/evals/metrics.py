@@ -152,11 +152,13 @@ class CaseScore:
 
 # Plain water is left out of ingredient scoring on both sides: whether a model lists
 # "water" or "water for soaking" says nothing about how well it read the recipe.
-_WATER_WORDS = {"water", "hot", "warm", "cold", "chilled", "boiling", "lukewarm", "soaking", "washing", "plain"}
+_WATER_WORDS = {"water", "hot", "warm", "cold", "chilled", "boiling", "lukewarm", "plain", "garam", "salted", "boiled"}
 
 
 def _is_water(name: str) -> bool:
-    words = tokens(name)
+    # Judge the name before its purpose: "hot water for soaking tamarind" is water.
+    head = re.split(r"\s+(?:for|to)\s+|[,(]", name, maxsplit=1)[0]
+    words = tokens(head)
     return "water" in words and words <= _WATER_WORDS
 
 
@@ -180,7 +182,7 @@ def score_case(case_id: str, gold: GoldRecipe, pred: Recipe | None, error: str |
 
     for gi, pi, _ in pairs:
         g, p = gold.ingredients[gi], pred.ingredients[pi]
-        ok = quantity_correct(g.amount, g.amount_max, g.unit, p.amount, p.unit)
+        ok = quantity_correct(g.amount, g.amount_max, g.unit, p.amount, p.unit, g.vague)
         if ok:
             s.correct_quantities += 1
             s.flagged_right += p.uncertain
