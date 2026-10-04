@@ -164,10 +164,15 @@ svg {
   background: #2a2a2a;
 }
 
+/* Text-only button. The padding gives its focus ring and tap area even room on
+   every side; the negative margin keeps the text aligned with the layout. */
 .button--quiet {
+  min-height: 40px;
+  margin: 0 -12px;
+  padding: 0 12px;
   border-color: transparent;
+  border-radius: 999px;
   background: none;
-  padding: 0;
   color: var(--ink-2);
   font-size: 14px;
 }
