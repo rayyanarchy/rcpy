@@ -98,3 +98,7 @@ Scoring rules are part of the result, so changes are listed here. Every change i
   - Two answer keys were wrong (salt in the aloo paratha dough is half a teaspoon; pasta water is an ingredient in the desi pasta).
 
   Effect on the first `single` run: ingredient F1 rose from 97.1% to 99.0%, and quantity accuracy from 90.6% to 95.8%. Rankings between strategies didn't change.
+
+## Prompt changes
+
+- **Extract v2 (2026-10-04).** Imports into Crouton showed spelled-out quantities ("five hundred ml", "a whole capsicum" with no amount). The extract prompt now asks for recipe-card quantities with digits ("500 ml", "1"), counts "a", "one" and "a whole" as 1, and keeps amounts out of names. Code also rewrites any quantity that still has no digits from its amount and unit. Rerun `20261004-150611-staged-lite` against v1 `20261003-192916-staged-lite`: quantities without digits went from 350 of 1,138 to 0, made-up servings or times 54 → 52, and right ingredient and amount 97.5% → 96.7%. Most of the new misses happened in only one of the three repeats. The display fix was worth the small cost; the published numbers are v2's.

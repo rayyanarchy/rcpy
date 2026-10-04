@@ -117,19 +117,19 @@ Three ways of turning a recording into a recipe, compared on 36 recipes dictated
 
 | | One call | Transcribe → extract (shipped) | + verify pass |
 | --- | --- | --- | --- |
-| Right ingredient **and** right amount | 94.5% | **97.5%** | 97.0% |
-| Ingredient F1 | 99.0% | 98.7% | 98.5% |
-| Servings or times made up (across 108 runs) | 126 | 54 | **36** |
+| Right ingredient **and** right amount | 94.5% | 96.7% | **97.0%** |
+| Ingredient F1 | **99.0%** | 98.9% | 98.5% |
+| Servings or times made up (across 108 runs) | 126 | 52 | **36** |
 | Spoken steps that made it into the method | **87%** | 84% | 78% |
 | Latency per recipe | **6.0s** | 6.5s | 10.0s |
-| Cost per recipe | $0.0032 | $0.0034 | $0.0060 |
+| Cost per recipe | $0.0032 | $0.0035 | $0.0060 |
 
-On the 12 held-out recipes, which nothing was tuned on, the ranking is the same: 95.7% / 95.9% / 96.5% for right ingredient and amount, and 46 / 21 / 12 servings or times made up.
+On the 12 held-out recipes, which nothing was tuned on, the ranking is the same: 95.7% / 95.7% / 96.5% for right ingredient and amount, and 46 / 21 / 12 servings or times made up.
 
 What this shows:
 
-- **Finding ingredients is close to solved; amounts and made-up details are where pipelines differ.** Splitting transcription from extraction cut wrong amounts by more than half (5.5% → 2.5%) and made-up servings and times by 57%, for half a second and $0.0002 more per recipe.
-- **A verify pass reduces made-up details further, but it costs more than it gains.** It's about 50% slower, nearly twice the cost, and it condenses the method, dropping spoken detail from the steps. Transcribe → extract is the default; `STRATEGY=staged` turns the verify pass on.
+- **Finding ingredients is close to solved; amounts and made-up details are where pipelines differ.** Splitting transcription from extraction cut wrong amounts by 40% (5.5% → 3.3%) and made-up servings and times by 59%, for half a second and $0.0003 more per recipe.
+- **A verify pass reduces made-up details further, but it costs more than it gains.** On amounts it's level with transcribe → extract (97.0% vs 96.7%), but it's about 50% slower and nearly twice the cost, and it condenses the method, dropping spoken detail from the steps. Transcribe → extract is the default; `STRATEGY=staged` turns the verify pass on.
 - **Remaining errors are the hard kind:** "aath" (eight) bread slices heard as "aadha" (half), and chole masala in tablespoons came back as teaspoons.
 - **Caveats:** read-aloud speech is more fluent than spontaneous speech, so a set of unscripted recordings is next. The step metric compares words, so rewording counts against a pipeline even when nothing was lost.
 

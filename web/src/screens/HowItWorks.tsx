@@ -14,7 +14,7 @@ const PIPELINE = [
 const FINDINGS = [
   [
     "Separating listening from understanding pays off.",
-    "Across all 36 recipes, transcribing first and extracting from the text roughly halved wrong amounts and made-up servings or times compared with one call, for about half a second more.",
+    "Across all 36 recipes, transcribing first and extracting from the text cut wrong amounts by 40% and made-up servings or times by more than half compared with one call, for about half a second more.",
   ],
   [
     "A third, verify stage was tested and left out.",
