@@ -87,7 +87,7 @@ Set these in your `.env` file (in the repo root or `engine/`).
 | --- | --- | --- |
 | `GEMINI_API_KEY` | none | Your Google Gemini API key. Required unless `DEMO_MODE` is on. |
 | `GEMINI_MODEL` | `gemini-3.5-flash-lite` | Gemini model used to process the audio. |
-| `STRATEGY` | `single` | Parse strategy used by the CLI and API: `single`, `staged`, or `staged-lite`. |
+| `STRATEGY` | `staged-lite` | Parse strategy used by the CLI and API: `staged-lite` (transcribe, then extract), `staged` (adds a verify pass), or `single` (one call). The default was chosen by the [evals](#results). |
 | `DEMO_MODE` | `false` | Set to `true` to use a built-in demo recipe instead of calling Gemini. |
 | `MAX_AUDIO_MB` | `50` | Maximum audio file size in MB. |
 | `DATA_DIR` | `./data` | Where the API stores shared recipes as JSON files when `DATABASE_URL` is not set, and where eval cases live. |
@@ -96,6 +96,28 @@ Set these in your `.env` file (in the repo root or `engine/`).
 | `PUBLIC_BASE_URL` | none | Public URL of the API, used to build share links. Defaults to the request's own host. |
 | `SHARE_URL` | `https://rcpy.vercel.app` | Server that `rcpy parse --share` publishes to. |
 
+
+## Results
+
+Three ways of turning a recording into a recipe, compared on 36 recipes dictated by three people (mostly Urdu/Hindi, Hinglish, and English with desi words), each run 3 times on Gemini 3.5 Flash-Lite. The recipes were read from [scripts](engine/evals/scripts/README.md) with mistakes written in on purpose: self-corrections, ranges, "thoda sa", *pav* and *katori*, forgotten and excluded ingredients. Each script carries its own answer key. Scoring is deterministic and described in [engine/evals](engine/evals/README.md).
+
+| | One call | Transcribe → extract (shipped) | + verify pass |
+| --- | --- | --- | --- |
+| Right ingredient **and** right amount | 94.5% | **97.5%** | 97.0% |
+| Ingredient F1 | 99.0% | 98.7% | 98.5% |
+| Servings or times made up (across 108 runs) | 126 | 54 | **36** |
+| Spoken steps that made it into the method | **87%** | 84% | 78% |
+| Latency per recipe | **6.0s** | 6.5s | 10.0s |
+| Cost per recipe | $0.0032 | $0.0034 | $0.0060 |
+
+On the 12 held-out recipes, which nothing was tuned on, the ranking is the same: 95.7% / 95.9% / 96.5% for right ingredient and amount, and 46 / 21 / 12 servings or times made up.
+
+What this shows:
+
+- **Finding ingredients is close to solved; amounts and made-up details are where pipelines differ.** Splitting transcription from extraction cut wrong amounts by more than half (5.5% → 2.5%) and made-up servings and times by 57%, for half a second and $0.0002 more per recipe.
+- **A verify pass reduces made-up details further, but it costs more than it gains.** It's about 50% slower, nearly twice the cost, and it condenses the method, dropping spoken detail from the steps. Transcribe → extract is the default; `STRATEGY=staged` turns the verify pass on.
+- **Remaining errors are the hard kind:** "aath" (eight) bread slices heard as "aadha" (half), and chole masala in tablespoons came back as teaspoons.
+- **Caveats:** read-aloud speech is more fluent than spontaneous speech, so a set of unscripted recordings is next. The step metric compares words, so rewording counts against a pipeline even when nothing was lost.
 
 ## Deploying to Vercel
 
@@ -107,7 +129,6 @@ Set these in the project's environment variables (for Preview too, if you deploy
 | --- | --- | --- |
 | `GEMINI_API_KEY` | yes | Processing recordings |
 | `DATABASE_URL` | yes | Share links. Without it, saved recipes live in one function instance's temp folder and links break. |
-| `STRATEGY` | recommended | `staged` shows the three-stage progress |
 | `PUBLIC_BASE_URL` | no | Leave unset so links use each deployment's own domain |
 
 After changing dependencies in `engine/pyproject.toml`, regenerate `requirements.txt` with the command at its top.
@@ -157,9 +178,10 @@ Audio you upload is sent to Google's Gemini API for processing, and the app dele
 - [x] Staged pipeline (transcribe, extract, verify) alongside the original single-call baseline
 - [x] Eval harness with deterministic scoring for ingredients, quantities, steps and invented values
 - [x] Redesigned web app in TypeScript, with live progress, inline review and Crouton export
-- [ ] Record and hand-check 30 to 50 real family recordings for the eval set, a third of them held out
-- [ ] Benchmark single, staged and staged-lite on that set, and make the winner the default strategy
-- [ ] Add Gemini prices to `engine/evals/pricing.json` so the results include cost per recipe
+- [x] Record 36 scripted family dictations with answer keys, a third of them held out
+- [x] Benchmark single, staged and staged-lite on them, and make the winner (staged-lite) the default
+- [x] Add Gemini prices so the results include cost per recipe
+- [ ] Unscripted ("freestyle") recordings, to check how far the scripted numbers carry over
 - [ ] Publish the numbers on the How it works page, with real failure examples
 - [ ] Show where each ingredient came from: the matching words in the transcript, with replay of that moment of the audio
 - [ ] Screenshots and a write-up of the approach and results in this README
