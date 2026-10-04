@@ -32,3 +32,19 @@ def test_rate_limited_calls_are_retried(monkeypatch):
 
     assert gemini._with_retries(flaky) == "ok"
     assert len(calls) == 3
+
+
+def test_api_errors_reach_people_as_plain_language():
+    from rcpy.errors import RcpyError
+
+    gemini = object.__new__(_gemini.Gemini)
+    gemini.label = "a.mp3"
+    raw = "Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests"
+    try:
+        with gemini._errors():
+            raise _error(429, raw)
+    except RcpyError as exc:
+        assert "more requests than it can handle" in str(exc)
+        assert "generativelanguage" not in str(exc)
+        assert exc.status == 429
+        assert raw in exc.__cause__.message  # kept for logs and evals

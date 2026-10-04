@@ -39,6 +39,17 @@ MAX_ATTEMPTS = 6
 MAX_WAIT = 90.0
 
 
+_STATUS = {429: 429, 503: 503}
+
+
+def user_message(exc: genai_errors.APIError) -> str:
+    if exc.code == 429:
+        return "RCPY is getting more requests than it can handle right now. Please try again in a few minutes."
+    if exc.code in (500, 503, 504):
+        return "The AI service is overloaded right now. Please try again in a minute."
+    return f"The AI service couldn't read this recording (error {exc.code}). Please try again."
+
+
 def retry_delay(exc: genai_errors.APIError, attempt: int) -> float | None:
     """Seconds to wait before trying again, or None to give up."""
     if exc.code not in RETRY_STATUS or attempt >= MAX_ATTEMPTS:
@@ -82,9 +93,11 @@ class Gemini:
         try:
             yield
         except genai_errors.APIError as exc:
-            raise RcpyError(f"{self.label}: Gemini API error ({exc.code}): {exc.message}", status=502) from exc
+            # The raw Gemini text (quota metrics, links) is for logs, not for people.
+            logging.getLogger("rcpy").warning("%s: Gemini API error %s: %s", self.label, exc.code, exc.message)
+            raise RcpyError(user_message(exc), status=_STATUS.get(exc.code, 502)) from exc
         except httpx.HTTPError as exc:
-            raise RcpyError(f"{self.label}: could not reach Gemini: {exc}", status=502) from exc
+            raise RcpyError("Couldn't reach the AI service. Please try again in a moment.", status=502) from exc
 
     @contextmanager
     def upload(self, path: Path, mime: str) -> Iterator[types.File]:

@@ -98,7 +98,7 @@ def test_gemini_network_failure_is_a_clean_error(tmp_path, monkeypatch):
     audio.write_bytes(b"x")
     res = runner.invoke(app, ["parse", str(audio)])
     assert res.exit_code == 1
-    assert "could not reach Gemini" in res.output
+    assert "Couldn't reach the AI service" in res.output
     assert "Traceback" not in res.output
 
 

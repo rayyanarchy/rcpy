@@ -83,7 +83,9 @@ def _predict_all(
                 raise RcpyError(f"{case.id}: no audio file in {case_dir}")
             pred = parse_audio(audio, settings, strategy=strategy, trace=trace)
         except RcpyError as exc:
-            error = str(exc)
+            cause = exc.__cause__
+            detail = getattr(cause, "message", None) or (str(cause) if cause else "")
+            error = f"{exc} [{detail}]" if detail else str(exc)
         record = {
             "case_id": case.id,
             "repeat": rep,
