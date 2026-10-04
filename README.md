@@ -1,10 +1,10 @@
 # RCPY
 
-Turn voice notes and dictations into recipes for Crouton, Markdown, and PDF.
+Dictate a recipe the way you'd tell family, in English, Hindi or Urdu, mixed however it comes out. RCPY writes it down as a structured recipe you can check, edit and send to [Crouton](https://crouton.app), Markdown or PDF.
+
+**Try it: [rcpy.vercel.app](https://rcpy.vercel.app)**
 
 ![RCPY home page: "Dictate recipes into Crouton", with Record and Drop a voice note](docs/screenshots/home.png)
-
-Talk through a recipe the way you'd tell family, in English, Hindi or Urdu, and RCPY writes it down as a structured recipe you can check, edit and send to [Crouton](https://crouton.app).
 
 | Reading the recording | Checking the result |
 | --- | --- |
@@ -14,106 +14,35 @@ Talk through a recipe the way you'd tell family, in English, Hindi or Urdu, and 
 | --- | --- | --- |
 | ![Recording screen with a live waveform and stop button](docs/screenshots/phone-recording.png) | ![Phone review with a sticky Open in Crouton button](docs/screenshots/phone-review.png) | ![The same recipe opened in the Crouton app](docs/screenshots/crouton-import.png) |
 
+## Why
 
-## Features
+Family recipes live in people's heads and come out in conversation: "adha kilo aloo, 15 20 lasun ki kali... nahi, dedh katori". Typing them up is tedious, and general-purpose transcription doesn't know what a *katori* is, which number was the correction, or that "thoda sa" means no number at all. RCPY is built for exactly that speech, and every choice in its pipeline was measured on recordings of it.
 
-- Speak naturally: English, Hindi or Urdu, mixed however it comes out, with amounts like "adha kilo" or "thoda sa" and corrections halfway through
-- A staged AI pipeline (transcribe, extract, verify) on Gemini, with every output validated against a schema
-- Measured, not guessed: an eval harness scores each pipeline on hand-checked real recordings (see [engine/evals](engine/evals/README.md)), and the app's How it works page shows the numbers
-- Record in the browser with a live waveform, or drop a voice note (M4A, MP3, WAV, WebM, OGG, FLAC)
-- Watch it work: each stage and the transcript appear as soon as they're ready
-- Review before anything leaves: edit every field in place; rows the model wasn't sure about are marked for you to check
-- Export to Crouton (opens the .crumb on a phone, or a QR code on a computer), Markdown, or PDF
-- Share a public link that expires after an hour
-- Demo mode for trying the whole flow without an API key
+## What it does
 
+- **Record or upload.** Record in the browser with a live waveform, or drop a voice note (M4A, MP3, WAV, WebM, OGG, FLAC).
+- **Watch it work.** The stages tick off and the transcript appears as soon as it's ready, usually within 5–15 seconds.
+- **Check before anything leaves.** Every field is editable in place, and rows the model wasn't sure about are marked "check". The original transcript sits alongside.
+- **Export.** Open in Crouton (the `.crumb` opens straight in the app on a phone; a computer shows a QR code), or download Markdown or a PDF.
+- **Share for an hour.** Get a public link with a clean recipe page. It and the recipe are deleted after an hour.
 
-## Prerequisites
+## How it works
 
-- Python 3.13+ and [uv](https://docs.astral.sh/uv/)
-- Node.js 22.12+ and npm (only for the web app)
-- A Google Gemini API key (not needed in demo mode)
-- A microphone, or an audio file of a recipe
-
-
-## Installation
-
-1. Clone the repo:
-   ```bash
-   git clone https://github.com/rayyanarchy/rcpy.git
-   cd rcpy
-   ```
-
-2. Copy the example environment file and add your Gemini API key:
-   ```bash
-   cp .env.example .env
-   ```
-
-3. Install the engine (the `--all-extras` flag adds the web API packages):
-   ```bash
-   cd engine
-   uv sync --all-extras
-   ```
-
-4. Install the web app (optional):
-   ```bash
-   cd ../web
-   npm install
-   ```
-
-
-## Command line
-
-Run these from `engine/`.
-
-```bash
-uv run rcpy parse data/raw/recipe.m4a              # prints JSON
-uv run rcpy parse data/raw/a.mp3 data/raw/b.wav -f json,md,html -o data/out/
-uv run rcpy parse data/raw/recipe.m4a --share      # prints a link that expires in 1 hour
-uv run rcpy parse data/raw/recipe.m4a -s staged    # pick a parse strategy: single, staged, staged-lite
-uv run rcpy serve                                  # the web API on http://127.0.0.1:3000
+```mermaid
+flowchart LR
+    A[Voice note] --> T["Transcribe<br/>word for word + English"]
+    T --> E["Extract<br/>ingredients, amounts, steps"]
+    E --> R["You review<br/>uncertain rows marked"]
+    R --> X[Crouton · Markdown · PDF · link]
 ```
 
-`rcpy eval` measures how accurately each strategy works on a set of hand-checked recordings. See [engine/evals/README.md](engine/evals/README.md).
-
-Set `DEMO_MODE=true` to try everything without an API key.
-
-`engine/data/` is where files live that aren't source code: put recordings in `data/raw/`, and outputs go to `data/out/` (the default when you parse several files or several formats without `-o`). Shared recipes are stored in `data/recipes/`. Everything in it is git-ignored.
-
-To run the web app in development, start `uv run rcpy serve` in `engine/` and `npm run dev` in `web/`, then open the URL Vite prints (usually `http://localhost:5173`). After `npm run build` in `web/`, `rcpy serve` also serves the built app itself.
-
-
-## How To Use (web app)
-
-1. Tap Record and talk through the recipe, or drop in a voice note.
-2. Watch RCPY transcribe it, pull out the ingredients and steps, and check them against what you said.
-3. Fix anything marked "check", or anything else, right in place.
-4. Open it in Crouton, download Markdown or a PDF, or copy a share link. Share links stop working after an hour.
-
-
-## Configuration
-
-Set these in your `.env` file (in the repo root or `engine/`).
-
-| Variable | Default | Description |
-| --- | --- | --- |
-| `GEMINI_API_KEY` | none | Your Google Gemini API key. Required unless `DEMO_MODE` is on. |
-| `GEMINI_MODEL` | `gemini-3.5-flash-lite` | Gemini model used to process the audio. |
-| `STRATEGY` | `staged-lite` | Parse strategy used by the CLI and API: `staged-lite` (transcribe, then extract), `staged` (adds a verify pass), or `single` (one call). The default was chosen by the [evals](#results). |
-| `DEMO_MODE` | `false` | Set to `true` to use a built-in demo recipe instead of calling Gemini. |
-| `MAX_AUDIO_MB` | `50` | Maximum audio file size in MB. |
-| `DATA_DIR` | `./data` | Where the API stores shared recipes as JSON files when `DATABASE_URL` is not set, and where eval cases live. |
-| `EVALS_DIR` | `./evals` | Where eval summaries and `pricing.json` live. |
-| `DATABASE_URL` | none | Postgres connection string (for example Neon). Leave empty to use files in `DATA_DIR`. |
-| `PUBLIC_BASE_URL` | none | Public URL of the API, used to build share links. Defaults to the request's own host. |
-| `SHARE_URL` | `https://rcpy.vercel.app` | Server that `rcpy parse --share` publishes to. |
-
+A Python engine (FastAPI on Gemini 3.5 Flash-Lite) does the listening and reading; a React and TypeScript app does the recording, review and export. Listening and reading are separate model calls: the first writes down what was said, the second turns that text into a recipe, validated against the same schema it was asked for. Details are in [docs/architecture.md](docs/architecture.md).
 
 ## Results
 
 ![The How it works page: the pipeline, the comparison table and findings](docs/screenshots/how-it-works.png)
 
-Three ways of turning a recording into a recipe, compared on 36 recipes dictated by three people (mostly Urdu/Hindi, Hinglish, and English with desi words), each run 3 times on Gemini 3.5 Flash-Lite. The recipes were read from [scripts](engine/evals/scripts/README.md) with mistakes written in on purpose: self-corrections, ranges, "thoda sa", *pav* and *katori*, forgotten and excluded ingredients. Each script carries its own answer key. Scoring is deterministic and described in [engine/evals](engine/evals/README.md).
+Three pipelines compared on 36 recipes dictated by three people (mostly Urdu/Hindi, Hinglish, and English with desi words), each run 3 times. The recipes were read from [scripts](engine/evals/scripts/README.md) with mistakes written in on purpose: self-corrections, ranges, "thoda sa", *pav* and *katori*, forgotten and excluded ingredients. Each script carries its own answer key, and the scoring is deterministic ([engine/evals](engine/evals/README.md)).
 
 | | One call | Transcribe → extract (shipped) | + verify pass |
 | --- | --- | --- | --- |
@@ -124,89 +53,95 @@ Three ways of turning a recording into a recipe, compared on 36 recipes dictated
 | Latency per recipe | **6.0s** | 6.5s | 10.0s |
 | Cost per recipe | $0.0032 | $0.0035 | $0.0060 |
 
-On the 12 held-out recipes, which nothing was tuned on, the ranking is the same: 95.7% / 95.7% / 96.5% for right ingredient and amount, and 46 / 21 / 12 servings or times made up.
+On the 12 held-out recipes, which nothing was tuned on, the order is the same: 95.7% / 95.7% / 96.5% for right ingredient and amount, and 46 / 21 / 12 servings or times made up.
 
 What this shows:
 
 - **Finding ingredients is close to solved; amounts and made-up details are where pipelines differ.** Splitting transcription from extraction cut wrong amounts by 40% (5.5% → 3.3%) and made-up servings and times by 59%, for half a second and $0.0003 more per recipe.
 - **A verify pass reduces made-up details further, but it costs more than it gains.** On amounts it's level with transcribe → extract (97.0% vs 96.7%), but it's about 50% slower and nearly twice the cost, and it condenses the method, dropping spoken detail from the steps. Transcribe → extract is the default; `STRATEGY=staged` turns the verify pass on.
 - **Remaining errors are the hard kind:** "aath" (eight) bread slices heard as "aadha" (half), and chole masala in tablespoons came back as teaspoons.
-- **Caveats:** read-aloud speech is more fluent than spontaneous speech, so a set of unscripted recordings is next. The step metric compares words, so rewording counts against a pipeline even when nothing was lost.
+- **Caveats:** read-aloud speech is more fluent than spontaneous speech, so unscripted recordings are next. The step metric compares words, so rewording counts against a pipeline even when nothing was lost.
 
-## Deploying to Vercel
+How the dataset was chosen is recorded in [ADR-0001](docs/adr/0001-eval-dataset-sourcing.md). Scoring and prompt changes, with their effect on the numbers, are logged in the [evals README](engine/evals/README.md#scoring-changes).
 
-The repo deploys as one Vercel project from the root: `vercel.json` builds the web app into `web/dist` and runs the engine as a single Python function (`api/index.py`, with dependencies pinned in `requirements.txt`). Uploads are capped at 4 MB there, because Vercel limits request bodies to 4.5 MB.
+## Quick start
 
-Set these in the project's environment variables (for Preview too, if you deploy branches):
-
-| Variable | Needed | Why |
-| --- | --- | --- |
-| `GEMINI_API_KEY` | yes | Processing recordings |
-| `DATABASE_URL` | yes | Share links. Without it, saved recipes live in one function instance's temp folder and links break. |
-| `PUBLIC_BASE_URL` | no | Leave unset so links use each deployment's own domain |
-
-After changing dependencies in `engine/pyproject.toml`, regenerate `requirements.txt` with the command at its top.
-
-
-## Tests
+You need Python 3.13+ with [uv](https://docs.astral.sh/uv/), and Node.js 22.12+. Demo mode needs no API key: every recording returns the same sample recipe, which is enough to try the whole flow.
 
 ```bash
-cd engine && uv run pytest
+git clone https://github.com/rayyanarchy/rcpy.git && cd rcpy
+cp .env.example .env                      # set DEMO_MODE=true, or add GEMINI_API_KEY
+cd web && npm ci && npm run build
+cd ../engine && uv sync --all-extras
+uv run rcpy serve                         # open http://127.0.0.1:3000
 ```
 
+For real recordings, put a [Gemini API key](https://aistudio.google.com/apikey) in `.env` and set `DEMO_MODE=false`. To develop with hot reload, see [docs/development.md](docs/development.md).
 
-## API
+The engine also works from the command line:
 
-| Method | Route | Description |
+```bash
+cd engine
+uv run rcpy parse my-recipe.m4a -f md      # recipe as Markdown on stdout
+```
+
+## Configuration
+
+Set these in `.env` (repo root or `engine/`), or as environment variables.
+
+| Variable | Default | Description |
 | --- | --- | --- |
-| `POST` | `/api/process` | Upload audio in the `audio` field and get a recipe draft back. Add `?stream=true` for NDJSON progress events (`plan`, `stage`, `transcript` for staged strategies, then `draft` or `error`) |
-| `POST` | `/api/recipes` | Save a recipe |
-| `GET` | `/api/recipes/{slug}` | Fetch a saved recipe |
-| `PUT` | `/api/recipes/{slug}` | Update a saved recipe |
-| `GET` | `/api/recipes/{slug}/crumb` | Download a recipe as a Crouton `.crumb` file |
-| `GET` | `/api/recipes/{slug}/md` | Download a recipe as Markdown |
-| `GET` | `/r/{slug}` | Public page for a saved recipe |
-| `GET` | `/health` | Health check |
+| `GEMINI_API_KEY` | – | Google Gemini API key. Required unless `DEMO_MODE` is on. |
+| `GEMINI_MODEL` | `gemini-3.5-flash-lite` | Model used for every stage. |
+| `STRATEGY` | `staged-lite` | `staged-lite` (transcribe → extract), `staged` (adds a verify pass), or `single` (one call). |
+| `DEMO_MODE` | `false` | `true` returns a canned recipe instead of calling Gemini. |
+| `MAX_AUDIO_MB` | `50` | Largest accepted upload. |
+| `DATABASE_URL` | – | Postgres for saved recipes (for example Neon). Without it they're JSON files in `DATA_DIR`. |
+| `DATA_DIR` | `./data` | Local recipes, recordings, outputs and eval cases. |
+| `EVALS_DIR` | `./evals` | Eval summaries and `pricing.json`. |
+| `PUBLIC_BASE_URL` | – | Base URL for share links. Leave unset to use the request's own host. |
+| `SHARE_URL` | `https://rcpy.vercel.app` | Server that `rcpy parse --share` publishes to. |
 
-FastAPI also serves interactive docs at `/docs`.
+## Documentation
 
+| Doc | For |
+| --- | --- |
+| [docs/architecture.md](docs/architecture.md) | How the engine, pipeline, API and web app fit together, and why |
+| [docs/development.md](docs/development.md) | Setup, daily commands, layout, how to make common changes |
+| [docs/api.md](docs/api.md) | Endpoints, the streaming events, errors and limits |
+| [docs/deploy.md](docs/deploy.md) | Vercel setup, environment, releasing, rollback, troubleshooting |
+| [engine/evals/README.md](engine/evals/README.md) | The evals: workflow, answer-key rules, metrics, change log |
+| [engine/evals/scripts/README.md](engine/evals/scripts/README.md) | The dictation scripts and how to record them |
+| [docs/adr/](docs/adr/) | Decision records |
 
 ## Privacy
 
-Audio you upload is sent to Google's Gemini API for processing, and the app deletes its temporary copy once processing finishes. Saved recipes are stored as text, in Postgres when `DATABASE_URL` is set and as JSON files otherwise, and are deleted automatically one hour after you save them. Anyone with a recipe's link can view it.
+Audio is sent to Google's Gemini API to be processed. RCPY's temporary copy, and the copy uploaded to Gemini, are deleted as soon as processing finishes. Recipes are only stored when you share them or open them in Crouton, and they're deleted an hour after being saved. Anyone with a recipe's link can view it during that hour. Your draft stays in your own browser until you start over.
 
+## Tech stack
 
-## Tech Stack
-
-- Engine: Python 3.13, Google Gen AI SDK (Gemini), Pydantic v2
-- CLI: Typer, Rich
-- API: FastAPI, Uvicorn
-- Storage: JSON files, or Postgres (Neon) via psycopg
-- Frontend: React 19, TypeScript, Vite, Lucide icons
-- Testing: pytest (engine), Vitest (web); ruff and prettier in CI
-- Fonts: Geist and Geist Mono
-
+- **Engine:** Python 3.13, Google Gen AI SDK (Gemini), Pydantic v2, FastAPI, Typer and Rich
+- **Storage:** Postgres (Neon) via psycopg, or JSON files
+- **Web:** React 19, TypeScript, Vite, Geist and Geist Mono, Lucide icons
+- **Quality:** pytest, Vitest, ruff, prettier, GitHub Actions
+- **Hosting:** Vercel (static app and a Python function)
 
 ## Roadmap
 
 - [x] Staged pipeline (transcribe, extract, verify) alongside the original single-call baseline
 - [x] Eval harness with deterministic scoring for ingredients, quantities, steps and invented values
 - [x] Redesigned web app in TypeScript, with live progress, inline review and Crouton export
-- [x] Record 36 scripted family dictations with answer keys, a third of them held out
-- [x] Benchmark single, staged and staged-lite on them, and make the winner (staged-lite) the default
-- [x] Add Gemini prices so the results include cost per recipe
+- [x] 36 scripted family dictations with answer keys, a third of them held out
+- [x] Benchmark single, staged and staged-lite, and make the winner (staged-lite) the default
+- [x] Results on the How it works page, with real failure examples
+- [x] Deployed on Vercel
 - [ ] Unscripted ("freestyle") recordings, to check how far the scripted numbers carry over
-- [x] Publish the numbers on the How it works page, with real failure examples
 - [ ] Show where each ingredient came from: the matching words in the transcript, with replay of that moment of the audio
-- [x] Screenshots and a write-up of the approach and results in this README
-- [ ] Deploy the beta
-
 
 ## Credits
 
 RCPY is an independent project and is not affiliated with or endorsed by Crouton. Geist and Geist Mono are used under the SIL Open Font License.
 
-
 ## License
 
-This project is open source and available under the [MIT License](LICENSE).
+[MIT](LICENSE)

@@ -4,6 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 RCPY turns dictated recipe audio into structured recipes (JSON / Markdown / HTML / Crouton `.crumb`). Two parts: a Python engine in `engine/` (library + Typer CLI + FastAPI server) and a React/TypeScript/Vite web app in `web/` that talks to that API.
 
+Human-facing docs live in `docs/` (architecture, development, api, deploy, ADRs) — keep them in sync when changing behaviour they describe.
+
 ## Commands
 
 Engine (run from `engine/`, uses `uv`, Python 3.13+):
