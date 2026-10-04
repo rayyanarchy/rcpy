@@ -88,4 +88,26 @@ def parse_audio(path: Path, settings: Settings, strategy: str | None = None, tra
                     )
         return DEMO.model_copy(deep=True)
 
-    return run(Gemini(settings, path.name, trace), path, mime)
+    return tidy_quantities(run(Gemini(settings, path.name, trace), path, mime))
+
+
+_SHORT_UNITS = {
+    "ITEM": "", "CUP": "cup", "TABLESPOON": "tbsp", "TEASPOON": "tsp", "OUNCE": "oz", "POUND": "lb",
+    "GRAM": "g", "KILOGRAM": "kg", "MILLILITER": "ml", "LITER": "l",
+}  # fmt: skip
+
+
+def tidy_quantities(result: ParseResult) -> ParseResult:
+    """Rewrite spelled-out quantities ("five hundred ml", "a whole") from the amount and unit.
+
+    Crouton shows the amount and unit as data and the quantity text as a label, so
+    words that repeat the number read twice. Quantities that already have digits, or
+    have no amount ("to taste"), are left alone.
+    """
+    for ingredient in result.recipe.ingredients:
+        if ingredient.amount is None or any(ch.isdigit() for ch in ingredient.quantity):
+            continue
+        number = f"{ingredient.amount:g}"
+        unit = _SHORT_UNITS[ingredient.unit.value]
+        ingredient.quantity = f"{number} {unit}".strip()
+    return result

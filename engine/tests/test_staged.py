@@ -53,3 +53,19 @@ def test_staged_lite_skips_verify(result, tmp_path):
     out = staged.run_lite(fake, tmp_path / "a.mp3", "audio/mp3")
     assert [stage for stage, _ in fake.calls] == ["transcribe", "extract"]
     assert out.recipe == result.recipe
+
+
+def test_spelled_out_quantities_are_rewritten_from_amount_and_unit(result):
+    from rcpy.schema import Ingredient, Unit
+    from rcpy.strategies import tidy_quantities
+
+    result.recipe.ingredients = [
+        Ingredient(
+            quantity="five hundred ml", amount=500, unit=Unit.MILLILITER, name="vegetable stock", uncertain=False
+        ),
+        Ingredient(quantity="a whole", amount=1, unit=Unit.ITEM, name="capsicum", uncertain=False),
+        Ingredient(quantity="1.5 katori", amount=1.5, unit=Unit.ITEM, name="toor dal", uncertain=False),
+        Ingredient(quantity="to taste", amount=None, unit=Unit.ITEM, name="salt", uncertain=False),
+    ]
+    quantities = [i.quantity for i in tidy_quantities(result).recipe.ingredients]
+    assert quantities == ["500 ml", "1", "1.5 katori", "to taste"]
