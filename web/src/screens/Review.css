@@ -116,7 +116,8 @@
 }
 
 .review__ingredient {
-  grid-template-columns: 120px minmax(0, 1fr) auto;
+  grid-template-columns: 150px minmax(0, 1fr) auto;
+  align-items: start;
 }
 
 .review__step {

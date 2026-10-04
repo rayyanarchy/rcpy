@@ -93,18 +93,15 @@ export function Review({ draft, onChange, onStartOver }: Props) {
               <ul className="review__list">
                 {draft.ingredients.map((item) => (
                   <li key={item.id} className="review__ingredient">
-                    <input
+                    <AutoTextarea
                       aria-label={`Amount of ${item.name || "ingredient"}`}
                       className="mono review__qty"
                       value={item.quantity}
                       placeholder="amount"
-                      onChange={(e) =>
-                        setIngredient(item.id, {
-                          quantity: e.target.value,
-                          ...parseQuantity(e.target.value),
-                          uncertain: false,
-                        })
-                      }
+                      onChange={(e) => {
+                        const quantity = e.target.value.replace(/\n/g, " ");
+                        setIngredient(item.id, { quantity, ...parseQuantity(quantity), uncertain: false });
+                      }}
                     />
                     <AutoTextarea
                       aria-label="Ingredient"
