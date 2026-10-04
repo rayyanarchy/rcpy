@@ -31,3 +31,10 @@
 .header__nav a[aria-current="page"] {
   color: var(--ink);
 }
+
+@media (max-width: 760px) {
+  .header {
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+}

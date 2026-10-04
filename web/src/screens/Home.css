@@ -204,8 +204,10 @@
 }
 
 @media (max-width: 760px) {
+  /* Every pixel above the record button counts on a phone. */
   .home__hero {
-    padding: 56px 0 40px;
+    gap: 20px;
+    padding: 12px 0 32px;
   }
 
   .home__panel,
