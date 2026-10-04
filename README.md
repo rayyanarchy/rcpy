@@ -2,6 +2,18 @@
 
 Turn voice notes and dictations into recipes for Crouton, Markdown, and PDF.
 
+![RCPY home page: "Dictate recipes into Crouton", with Record and Drop a voice note](docs/screenshots/home.png)
+
+Talk through a recipe the way you'd tell family, in English, Hindi or Urdu, and RCPY writes it down as a structured recipe you can check, edit and send to [Crouton](https://crouton.app).
+
+| Reading the recording | Checking the result |
+| --- | --- |
+| ![Processing: the transcribe stage is done and the Hindi/English transcript is shown while extraction runs](docs/screenshots/processing.png) | ![Review: Khatti Dal with editable ingredients, amber "check" markers, the original transcript and export options](docs/screenshots/review.png) |
+
+| Recording on a phone | Reviewing on a phone | Imported into Crouton |
+| --- | --- | --- |
+| ![Recording screen with a live waveform and stop button](docs/screenshots/phone-recording.png) | ![Phone review with a sticky Open in Crouton button](docs/screenshots/phone-review.png) | ![The same recipe opened in the Crouton app](docs/screenshots/crouton-import.png) |
+
 
 ## Features
 
@@ -99,6 +111,8 @@ Set these in your `.env` file (in the repo root or `engine/`).
 
 ## Results
 
+![The How it works page: the pipeline, the comparison table and findings](docs/screenshots/how-it-works.png)
+
 Three ways of turning a recording into a recipe, compared on 36 recipes dictated by three people (mostly Urdu/Hindi, Hinglish, and English with desi words), each run 3 times on Gemini 3.5 Flash-Lite. The recipes were read from [scripts](engine/evals/scripts/README.md) with mistakes written in on purpose: self-corrections, ranges, "thoda sa", *pav* and *katori*, forgotten and excluded ingredients. Each script carries its own answer key. Scoring is deterministic and described in [engine/evals](engine/evals/README.md).
 
 | | One call | Transcribe → extract (shipped) | + verify pass |
@@ -182,9 +196,9 @@ Audio you upload is sent to Google's Gemini API for processing, and the app dele
 - [x] Benchmark single, staged and staged-lite on them, and make the winner (staged-lite) the default
 - [x] Add Gemini prices so the results include cost per recipe
 - [ ] Unscripted ("freestyle") recordings, to check how far the scripted numbers carry over
-- [ ] Publish the numbers on the How it works page, with real failure examples
+- [x] Publish the numbers on the How it works page, with real failure examples
 - [ ] Show where each ingredient came from: the matching words in the transcript, with replay of that moment of the audio
-- [ ] Screenshots and a write-up of the approach and results in this README
+- [x] Screenshots and a write-up of the approach and results in this README
 - [ ] Deploy the beta
 
 
