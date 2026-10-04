@@ -8,7 +8,7 @@ class Settings(BaseSettings):
 
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.5-flash-lite"
-    strategy: str = "single"  # see rcpy.strategies.STRATEGIES
+    strategy: str = "staged-lite"  # see rcpy.strategies.STRATEGIES; chosen by the evals (engine/evals/README.md)
     max_audio_mb: float = 50
     demo_mode: bool = False
 

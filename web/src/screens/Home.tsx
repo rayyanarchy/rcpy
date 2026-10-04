@@ -157,7 +157,7 @@ export function Home({ onRecord, onFile, error }: Props) {
           <span>Audio is deleted after processing. Shared links expire after an hour.</span>
           <Link to="/how-it-works" className="home__proof">
             {headline
-              ? `Ingredient F1 ${pct(headline.metrics.ingredient_f1)} on ${headline.cases.length} real recordings →`
+              ? `Ingredient F1 ${pct(headline.metrics.ingredient_f1)} on ${headline.cases.length} dictated recipes →`
               : "How it works →"}
           </Link>
         </div>

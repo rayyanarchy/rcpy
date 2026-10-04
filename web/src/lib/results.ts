@@ -47,12 +47,12 @@ export interface Summary {
 }
 
 /** The strategy the engine ships by default; highlighted in the results table. */
-export const SHIPPED = "staged";
+export const SHIPPED = "staged-lite";
 /** Columns of the comparison, in display order. */
 export const STRATEGIES = [
   { id: "single", label: "One call" },
-  { id: "staged-lite", label: "Staged, no verify" },
-  { id: "staged", label: "Staged" },
+  { id: "staged-lite", label: "Transcribe → extract" },
+  { id: "staged", label: "+ verify pass" },
 ];
 
 const files = import.meta.glob<Summary>("../../../engine/evals/results/*.json", { eager: true, import: "default" });
